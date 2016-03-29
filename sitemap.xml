@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://sonaive.com/about/index.html</loc>
+    
+    <lastmod>2016-03-29T14:51:06.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://sonaive.com/2014/11/07/how-to-build-rest-client/</loc>
     
     <lastmod>2014-11-08T18:12:21.000Z</lastmod>
