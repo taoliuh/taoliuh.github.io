@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>如何防止内存泄漏 | So Naive</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="#Memory Leak
+考虑下面的代码块：
+123456789public class SampleActivity extends Activity &amp;#123;    private final Handler mLeakyHandler = new Handler() &amp;#123;        @Override        public void handleMessage(Mess">
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何防止内存泄漏">
+<meta property="og:url" content="http://sonaive.com/2014/08/26/how-to-avoid-memeory-leak/index.html">
+<meta property="og:site_name" content="So Naive">
+<meta property="og:description" content="#Memory Leak
+考虑下面的代码块：
+123456789public class SampleActivity extends Activity &amp;#123;    private final Handler mLeakyHandler = new Handler() &amp;#123;        @Override        public void handleMessage(Mess">
+<meta property="og:updated_time" content="2014-08-26T09:25:40.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="如何防止内存泄漏">
+<meta name="twitter:description" content="#Memory Leak
+考虑下面的代码块：
+123456789public class SampleActivity extends Activity &amp;#123;    private final Handler mLeakyHandler = new Handler() &amp;#123;        @Override        public void handleMessage(Mess">
+  
+    <link rel="alternate" href="/atom.xml" title="So Naive" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">So Naive</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://sonaive.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-how-to-avoid-memeory-leak" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2014/08/26/how-to-avoid-memeory-leak/" class="article-date">
+  <time datetime="2014-08-26T02:53:10.000Z" itemprop="datePublished">2014-08-26</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      如何防止内存泄漏
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>#Memory Leak</p>
+<p>考虑下面的代码块：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SampleActivity</span> <span class="keyword">extends</span> <span class="title">Activity</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Handler mLeakyHandler = <span class="keyword">new</span> Handler() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleMessage</span><span class="params">(Message msg)</span> </span>&#123;</span><br><span class="line">            <span class="comment">// ...</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>也许不是那么明显，这块代码能造成大量的内存溢出。Android Lint 会提示如下警告</p>
+<blockquote>
+<p>In Android, Handler classes should be static or leaks might occur.</p>
+</blockquote>
+<p>但是内存是在哪儿溢出的，是如何发生的？首先通过列出我们已经知道的事实来找问题的根源：</p>
+<p>1.当Android应用程序第一次启动时，framework在应用程序的主线程里创建了一个Looper对象。Looper实现了一个简单的消息队列，依次处理队列里的消息对象。所有的应用程序框架里的事件（比如Activity的生命周期函数调用，按钮点击事件等等）都封装为消息对象，被加入到Looper的消息队列中并依次处理。主线程的Looper在整个应用的生命周期里会一直存在。</p>
+<p>2.当在主线程里实例化一个Handler时，就和Looper的消息队列关联在一起了。发送到消息队列的消息会持有Handler的引用，使得当Looper最后处理消息时候，framework可以调用Handler#handleMessage（Message）.</p>
+<p>3.在Java中，非静态匿名内部类会持有它所在外部类的隐式引用。而静态内部类不会。</p>
+<a id="more"></a>
+<p>那么到底内存是在什么地方泄漏的?非常巧妙，思考下面一段示例代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SampleActivity</span> <span class="keyword">extends</span> <span class="title">Activity</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Handler mLeakyHandler = <span class="keyword">new</span> Handler() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleMessage</span><span class="params">(Message msg)</span> </span>&#123;</span><br><span class="line">            <span class="comment">// ...</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Post a message and delay its execution for 10 minutes.</span></span><br><span class="line">        mLeakyHandler.postDelayed(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123; &#125;</span><br><span class="line">        &#125;, <span class="number">60</span> * <span class="number">10</span> * <span class="number">1000</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Go back to the previous Activity.</span></span><br><span class="line">        finish();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当activity结束掉，延迟的消息会在主线程的队列中生存10分钟，直到被处理。该消息持有activity <code>Handler</code>的引用，且<code>Handler</code>持有外部类的隐式引用（当前情况下是SampleActivity）.该引用会持续存在直到消息被处理，因此妨碍了<code>Activity Context</code>被垃圾回收，从而导致应用程序资源泄漏。注意在15行的匿名内部类会导致一样的情况。非静态匿名内部类的实例持有它们外部类的的隐式引用，因此<code>Context</code>会泄漏。</p>
+<p>为了修复这个问题，创建一个类继承<code>Handler</code>或者使用静态内部类。静态内部类不会持有它的外部类的隐式引用，所以activity不会溢出。如果需要在<code>Handler</code>中调用外部activity的方法，使<code>Handler</code>持有activity的<code>WeakReference</code>,因此不会导致<code>Context</code>意外溢出。当实例化匿名的<code>Runnable</code>类时，为了修复内存溢出，为这个类创建一个静态域（因为匿名内部类的静态实例不会持有它的外部类的引用）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SampleActivity</span> <span class="keyword">extends</span> <span class="title">Activity</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span><br><span class="line">     * Instances of static inner classes do not hold an implicit</span><br><span class="line">     * reference to their outer class.</span><br><span class="line">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">MyHandler</span> <span class="keyword">extends</span> <span class="title">Handler</span> </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> WeakReference&lt;SampleActivity&gt; mActivity;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">MyHandler</span><span class="params">(SampleActivity activity)</span> </span>&#123;</span><br><span class="line">            mActivity = <span class="keyword">new</span> WeakReference&lt;SampleActivity&gt;(activity);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleMessage</span><span class="params">(Message msg)</span> </span>&#123;</span><br><span class="line">            SampleActivity activity = mActivity.get();</span><br><span class="line">            <span class="keyword">if</span> (activity != <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="comment">// ...</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> MyHandler mHandler = <span class="keyword">new</span> MyHandler(<span class="keyword">this</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span><br><span class="line">     * Instances of anonymous classes do not hold an implicit</span><br><span class="line">     * reference to their outer class when they are "static".</span><br><span class="line">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Runnable sRunnable = <span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123; &#125;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Post a message and delay its execution for 10 minutes.</span></span><br><span class="line">        mHandler.postDelayed(sRunnable, <span class="number">60</span> * <span class="number">10</span> * <span class="number">1000</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Go back to the previous Activity.</span></span><br><span class="line">        finish();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>静态和非静态内部类之间的区别很微妙，但每个Android程序员都应该理解它。底线是什么？如果内部类的实例比activity的<br>生命周期长，避免在activity中使用非静态内部类。相反，推荐使用静态内部类，持有activity的弱引用。</p>
+<p>以下是原文链接：<br><a href="http://www.androiddesignpatterns.com/2013/01/inner-class-handler-memory-leak.html" target="_blank" rel="external">How to Leak a Context: Handlers &amp; Inner Classes</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://sonaive.com/2014/08/26/how-to-avoid-memeory-leak/" data-id="cimd7oqvs00001es6cufaay03" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2014/11/07/how-to-build-rest-client/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          如何构建一个REST客户端
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2014/08/25/the-loader-framework/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Loader框架</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/08/">August 2014</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/07/">July 2014</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2014/11/07/how-to-build-rest-client/">如何构建一个REST客户端</a>
+          </li>
+        
+          <li>
+            <a href="/2014/08/26/how-to-avoid-memeory-leak/">如何防止内存泄漏</a>
+          </li>
+        
+          <li>
+            <a href="/2014/08/25/the-loader-framework/">Loader框架</a>
+          </li>
+        
+          <li>
+            <a href="/2014/07/28/build-blog-with-github-plus-octopress/">搭建我的 github + octopress 博客</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2016 So Naive<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>
