@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" >
+  <title>浅析Cube SDK里的ImageLoader组件是如何加载图片的（一） | So Naive</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="为什么使用轻量级的库？通常我会选择一些成熟的、功能丰富的框架，而这些框架通常是一些重量级的库，也许很多功能你根本用不到，而这些需求之外的功能直接导致了代码体积的增长。也许使用Proguard能移除没有使用的代码，但是类之间如果存在复杂的依赖耦合关系，Proguard还能起到多大作用，Who knows. 有人担心以后可能需要用到那些功能，现在的库没法满足需求. OK, 在使用这个库的时候了解是如何">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浅析Cube SDK里的ImageLoader组件是如何加载图片的（一）">
+<meta property="og:url" content="http://sonaive.com/2016/03/30/image-loader-in-cube-sdk_1/index.html">
+<meta property="og:site_name" content="So Naive">
+<meta property="og:description" content="为什么使用轻量级的库？通常我会选择一些成熟的、功能丰富的框架，而这些框架通常是一些重量级的库，也许很多功能你根本用不到，而这些需求之外的功能直接导致了代码体积的增长。也许使用Proguard能移除没有使用的代码，但是类之间如果存在复杂的依赖耦合关系，Proguard还能起到多大作用，Who knows. 有人担心以后可能需要用到那些功能，现在的库没法满足需求. OK, 在使用这个库的时候了解是如何">
+<meta property="og:updated_time" content="2016-04-01T09:06:42.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="浅析Cube SDK里的ImageLoader组件是如何加载图片的（一）">
+<meta name="twitter:description" content="为什么使用轻量级的库？通常我会选择一些成熟的、功能丰富的框架，而这些框架通常是一些重量级的库，也许很多功能你根本用不到，而这些需求之外的功能直接导致了代码体积的增长。也许使用Proguard能移除没有使用的代码，但是类之间如果存在复杂的依赖耦合关系，Proguard还能起到多大作用，Who knows. 有人担心以后可能需要用到那些功能，现在的库没法满足需求. OK, 在使用这个库的时候了解是如何">
+  
+    <link rel="alternative" href="/atom.xml" title="So Naive" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+	<header id="header" class="inner">
+		<a href="/" class="profilepic">
+			
+			<img src="/assets/img/avatar.jpg" class="js-avatar" style="width: 100%;height: 100%;opacity: 1;">
+			
+		</a>
+
+		<hgroup>
+		  <h1 class="header-author"><a href="/">So Naive</a></h1>
+		</hgroup>
+
+		
+
+		
+
+		<div class="switch-area">
+			<div class="switch-wrap">
+				<section class="switch-part switch-part1">
+					<nav class="header-menu">
+						<ul>
+						
+							<li><a href="/">主页</a></li>
+				        
+							<li><a href="/archives">所有文章</a></li>
+				        
+							<li><a href="/about/">关于我</a></li>
+				        
+						</ul>
+					</nav>
+					<nav class="header-nav">
+						<div class="social">
+							
+								<a class="github" target="_blank" href="https://github.com/taoliuh" title="github">github</a>
+					        
+								<a class="weibo" target="_blank" href="http://weibo.com/u/3190235471?is_all=1" title="weibo">weibo</a>
+					        
+						</div>
+					</nav>
+				</section>
+				
+				
+				
+				
+
+				
+			</div>
+		</div>
+	</header>				
+</div>
+
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+  	<div class="overlay">
+  		<div class="slider-trigger"></div>
+  		<h1 class="header-author js-mobile-header hide">So Naive</h1>
+  	</div>
+	<div class="intrude-less">
+		<header id="header" class="inner">
+			<div class="profilepic">
+			
+				<img src="/assets/img/avatar.jpg" class="js-avatar" style="width: 100%;height: 100%;opacity: 1;">
+			
+			</div>
+			<hgroup>
+			  <h1 class="header-author">So Naive</h1>
+			</hgroup>
+			
+			<nav class="header-menu">
+				<ul>
+				
+					<li><a href="/">主页</a></li>
+		        
+					<li><a href="/archives">所有文章</a></li>
+		        
+					<li><a href="/about/">关于我</a></li>
+		        
+		        <div class="clearfix"></div>
+				</ul>
+			</nav>
+			<nav class="header-nav">
+				<div class="social">
+					
+						<a class="github" target="_blank" href="https://github.com/taoliuh" title="github">github</a>
+			        
+						<a class="weibo" target="_blank" href="http://weibo.com/u/3190235471?is_all=1" title="weibo">weibo</a>
+			        
+				</div>
+			</nav>
+		</header>				
+	</div>
+</nav>
+
+      <div class="body-wrap"><article id="post-image-loader-in-cube-sdk_1" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2016/03/30/image-loader-in-cube-sdk_1/" class="article-date">
+  	<time datetime="2016-03-30T15:35:11.000Z" itemprop="datePublished">2016-03-30</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      浅析Cube SDK里的ImageLoader组件是如何加载图片的（一）
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+        
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="为什么使用轻量级的库？"><a href="#为什么使用轻量级的库？" class="headerlink" title="为什么使用轻量级的库？"></a>为什么使用轻量级的库？</h1><p>通常我会选择一些成熟的、功能丰富的框架，而这些框架通常是一些重量级的库，也许很多功能你根本用不到，而这些需求之外的功能直接导致了代码体积的增长。也许使用Proguard能移除没有使用的代码，但是类之间如果存在复杂的依赖耦合关系，Proguard还能起到多大作用，Who knows. 有人担心以后可能需要用到那些功能，现在的库没法满足需求. OK, 在使用这个库的时候了解是如何设计和实现的，优秀的库都是对扩展开放的，面向接口编程，那么需要新功能的话就扩展它吧，学习其他人造轮子也会提高自己的编程能力。</p>
+<p>曾经一个朋友拿着他们公司大约200kb的类似小米游戏下载软件给我看，我简直无法相信，现在一个功能非常简单的apk动不动就是几兆，能做到这个程度，几乎让人怀疑这个软件的是否专业，然而它在低端机器上表现得都非常流畅。我们费劲心思琢磨如何给apk瘦身，结果增加几个大的jar包就打回了原形，我们要增加第三方统计，友盟的百度的都加上，再加上第三方登录，推送，这些sdk再引用了大量的库比如http组件，json解析，安装包一下子膨胀了几兆，难受但是无奈。</p>
+<h1 id="一个图片加载框架的加载流程"><a href="#一个图片加载框架的加载流程" class="headerlink" title="一个图片加载框架的加载流程"></a>一个图片加载框架的加载流程</h1><pre><code>1. CubeImageView会检查图片是否已经加载过，图片已经加载完成并已经在显示的重复请求直接忽略。
+2. 检查图片是否在内存缓存中，如果再内存中，显示内存中的图片。否则，创建一个ImageTask, 传递给 ImageLoader, ImageTaskExecutor会处理这个任务。
+3. ImageTaskExecutor 会用后台线程处理这个ImageTask.
+4. ImageProvider负责获取图片，如果图片在本地有文件缓存，那么直接从本地文件加载；否则从网络下载，存文件缓存。
+5. 获取到图片之后，存内存缓存，通知加载完成。收到加载完成通知后，ImageView就可以显示图片了。
+</code></pre><p>根据这个加载流程，从核心类入手，逐个分析实现这样一个图片加载框架，我们关注的一些细节问题。<br><a id="more"></a></p>
+<h1 id="核心类功能介绍"><a href="#核心类功能介绍" class="headerlink" title="核心类功能介绍"></a>核心类功能介绍</h1><h2 id="1-CubeImageView"><a href="#1-CubeImageView" class="headerlink" title="1.CubeImageView"></a>1.CubeImageView</h2><p><code>CubeImageView</code>有多个重载的<code>loadImage</code>方法，将加载的信息封装到<code>ImageRequest</code>, 客户端可以指定要加载图片最终显示的宽高。再看下面的代码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">tryLoadImage</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (mRequest == <span class="keyword">null</span> || TextUtils.isEmpty(mRequest.getUrl())) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> width = getWidth();</span><br><span class="line">    <span class="keyword">int</span> height = getHeight();</span><br><span class="line"></span><br><span class="line">    ViewGroup.LayoutParams lyp = getLayoutParams();</span><br><span class="line">    <span class="keyword">boolean</span> isFullyWrapContent = lyp != <span class="keyword">null</span> &amp;&amp; lyp.height == LayoutParams.WRAP_CONTENT &amp;&amp; lyp.width == LayoutParams.WRAP_CONTENT;</span><br><span class="line">    <span class="comment">// if the view's bounds aren't known yet, and this is not a wrap-content/wrap-content</span></span><br><span class="line">    <span class="comment">// view, hold off on loading the image.</span></span><br><span class="line">    <span class="keyword">if</span> (width == <span class="number">0</span> &amp;&amp; height == <span class="number">0</span> &amp;&amp; !isFullyWrapContent) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    mRequest.setLayoutSize(width, height);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 1. Check the previous ImageTask related to this ImageView</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">null</span> != mImageTask) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// duplicated ImageTask, return directly.</span></span><br><span class="line">        <span class="keyword">if</span> (mImageTask.isLoadingThisUrl(mRequest)) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// ImageView is reused, detach it from the related ImageViews of the previous ImageTask.</span></span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            mImageLoader.detachImageViewFromImageTask(mImageTask, <span class="keyword">this</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 2. Let the ImageView hold this ImageTask. When ImageView is reused next time, check it in step 1.</span></span><br><span class="line">    ImageTask imageTask = mImageLoader.createImageTask(mRequest);</span><br><span class="line">    <span class="comment">//.createImageTask(mUrl, width, height, mImageReuseInfo);</span></span><br><span class="line">    mImageTask = imageTask;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 3. Query cache, if hit, return at once.</span></span><br><span class="line">    <span class="keyword">boolean</span> hitCache = mImageLoader.queryCache(imageTask, <span class="keyword">this</span>);</span><br><span class="line">    <span class="keyword">if</span> (hitCache) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        mImageLoader.addImageTask(mImageTask, <span class="keyword">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这段代码注释非常清晰，那么有几个问题，</p>
+<h3 id="如何判断ImageView是被复用的，如何判断重复请求？"><a href="#如何判断ImageView是被复用的，如何判断重复请求？" class="headerlink" title="如何判断ImageView是被复用的，如何判断重复请求？"></a>如何判断ImageView是被复用的，如何判断重复请求？</h3><p>每个<code>CubeImageView</code>都绑定了一个<code>ImageTask</code>，<code>ImageTask</code>对请求进行了封装，内部类<code>ImageViewHolder</code>使用弱引用持有ImageView, 类似android消息处理中的一个类<code>Message</code>, 内部实现了一个池，但是正式发布的代码没有启用，作者说是因为不太稳定就没用。如果不使用对象池的话，更简单的做法是使用ImageView的setTag方法绑定请求或者加载地址，来达到防止重复加载或者图片错位的目的。<br><code>ImageTask</code>这个成员变量如果为null, 表示是第一次加载图片，并且创建<code>ImageTask</code>,查询内存缓存，内存缓存未击中，ze 否则的话这个ImageView就是复用的，接着根据url判断重复请求，如果是新的请求，移除原来的绑定。并将真正的加载任务<code>LoadImageTask</code>从任务队列中移除，取消正在执行的且不是预加载的图片请求。</p>
+<h2 id="2-SimpleTask"><a href="#2-SimpleTask" class="headerlink" title="2.SimpleTask"></a>2.SimpleTask</h2><p><code>SimpleTask</code>继承Runnable, 是一个抽象类，定义了任务的4种状态，<code>STATE_NEW</code>, <code>STATE_RUNNING</code>, <code>STATE_FINISH</code>, <code>STATE_CANCELLED</code>, 代表任务不同的执行状态，使用主线程Looper创建静态Handler与主线程通信，通知任务完成或者取消。如果任务执行过程中出错，设置<code>ImageTask</code>的标记位mFlag, 在回调过程中检查加载是否成功，调用<code>DefaultImageLoadHandler</code>进行view更新，显示loading图片，下载失败的图片或者正确加载的图片。<code>SimpleTask</code>有一个mCurrentThread成员，保存当前正在执行的线程，可以在需要的时候方便调用中断退出任务。</p>
+<h2 id="3-LoadImageTask"><a href="#3-LoadImageTask" class="headerlink" title="3.LoadImageTask"></a>3.LoadImageTask</h2><p><code>LoadImageTask</code>继承<code>SimpleTask</code>, 实现doInBackground方法，从Disk缓存或者网络取数据。重写onFinish, onCancel方法，onFinish是在主线程中执行的，调用<code>ImageLoadHandler</code>对图片进行处理和显示，删除任务队列中已经完成或者取消的任务。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleMessage</span><span class="params">(Message msg)</span> </span>&#123;</span><br><span class="line">    SimpleTask work = (SimpleTask) msg.obj;</span><br><span class="line">    <span class="keyword">switch</span> (msg.what) &#123;</span><br><span class="line">        <span class="keyword">case</span> MSG_TASK_DONE:</span><br><span class="line">            <span class="keyword">boolean</span> isCanceled = work.isCancelled();</span><br><span class="line">            work.mState.set(STATE_FINISH);</span><br><span class="line">            work.onFinish(isCanceled);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="1）为什么要使用ConcurrentHashMap保存待执行的任务？"><a href="#1）为什么要使用ConcurrentHashMap保存待执行的任务？" class="headerlink" title="1）为什么要使用ConcurrentHashMap保存待执行的任务？"></a>1）为什么要使用ConcurrentHashMap保存待执行的任务？</h3><p>配置线程池<code>DefaultImageTaskExecutor</code>管理线程，线程池与工作队列BlockingQueue密切相关，其中在工作队列中保存了所有等待执行的任务。所有提交的任务都放入了这个队列，Executor从队列中取出任务执行，用户往队列中添加任务，形成了一个生产者-消费者模型。既然在创建ThreadPoolExecutor时就已经传入了一个BlockingQueue, 为何还需要使用ConcurrentHashMap保存所有的任务呢？原因是ImageLoader启用了生命周期管理，随着Activity或者Fragment生命周期的变迁，在UI从部分可见变为可见时调用pauseWork暂停工作，UI变为可见时调用resumeWork恢复工作，UI变为完全不可见时调用stopWork，将标记位mExitTaskEarly设置为true, 标记位mPauseWork设置为true, 正在执行的任务进入阻塞状态或者退出，已经执行完毕的任务可能在未更新界面的情况下退出，但是这些任务并没有从map里移除，UI从完全不可见变为可见时调用recoverWork, 重新提交map里剩余未执行完的任务。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doInBackground</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (DEBUG) &#123;</span><br><span class="line">        CLog.d(LOG_TAG, MSG_TASK_DO_IN_BACKGROUND, <span class="keyword">this</span>, mImageTask);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (mImageTask.getStatistics() != <span class="keyword">null</span>) &#123;</span><br><span class="line">        mImageTask.getStatistics().s1_beginLoad();</span><br><span class="line">    &#125;</span><br><span class="line">    Bitmap bitmap = <span class="keyword">null</span>;</span><br><span class="line">    <span class="comment">// Wait here if work is paused and the task is not cancelled</span></span><br><span class="line">    <span class="keyword">synchronized</span> (mImageLoader.mPauseWorkLock) &#123;</span><br><span class="line">        <span class="keyword">while</span> (mImageLoader.mPauseWork &amp;&amp; !isCancelled()) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (DEBUG) &#123;</span><br><span class="line">                    CLog.d(LOG_TAG, MSG_TASK_WAITING, <span class="keyword">this</span>, mImageTask);</span><br><span class="line">                &#125;</span><br><span class="line">                mImageLoader.mPauseWorkLock.wait();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// If this task has not been cancelled by another</span></span><br><span class="line">    <span class="comment">// thread and the ImageView that was originally bound to this task is still bound back</span></span><br><span class="line">    <span class="comment">// to this task and our "exit early" flag is not set then try and fetch the bitmap from</span></span><br><span class="line">    <span class="comment">// the cache</span></span><br><span class="line">    <span class="keyword">if</span> (!isCancelled() &amp;&amp; !mImageLoader.mExitTasksEarly &amp;&amp; (mImageTask.isPreLoad() || mImageTask.stillHasRelatedImageView())) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            bitmap = mImageLoader.mImageProvider.fetchBitmapData(mImageLoader, mImageTask, mImageLoader.mImageReSizer);</span><br><span class="line">            <span class="keyword">if</span> (DEBUG) &#123;</span><br><span class="line">                CLog.d(LOG_TAG, MSG_TASK_AFTER_fetchBitmapData, <span class="keyword">this</span>, mImageTask, isCancelled());</span><br><span class="line">            &#125;</span><br><span class="line">            mDrawable = mImageLoader.mImageProvider.createBitmapDrawable(mImageLoader.mResources, bitmap);</span><br><span class="line">            mImageLoader.mImageProvider.addBitmapToMemCache(mImageTask.getIdentityKey(), mDrawable);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (OutOfMemoryError e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onFinish</span><span class="params">(<span class="keyword">boolean</span> canceled)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (DEBUG) &#123;</span><br><span class="line">        CLog.d(LOG_TAG, MSG_TASK_FINISH, <span class="keyword">this</span>, mImageTask, mImageLoader.mExitTasksEarly);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (mImageLoader.mExitTasksEarly) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!isCancelled() &amp;&amp; !mImageLoader.mExitTasksEarly) &#123;</span><br><span class="line">        mImageTask.onLoadTaskFinish(mDrawable, mImageLoader.mImageLoadHandler);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    mImageLoader.mLoadWorkList.remove(mImageTask.getIdentityKey());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="2）如何退出正在执行的任务，暂停任务和恢复任务？"><a href="#2）如何退出正在执行的任务，暂停任务和恢复任务？" class="headerlink" title="2）如何退出正在执行的任务，暂停任务和恢复任务？"></a>2）如何退出正在执行的任务，暂停任务和恢复任务？</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">synchronized</span> (mImageLoader.mPauseWorkLock) &#123;</span><br><span class="line">    <span class="keyword">while</span> (mImageLoader.mPauseWork &amp;&amp; !isCancelled()) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (DEBUG) &#123;</span><br><span class="line">                CLog.d(LOG_TAG, MSG_TASK_WAITING, <span class="keyword">this</span>, mImageTask);</span><br><span class="line">            &#125;</span><br><span class="line">            mImageLoader.mPauseWorkLock.wait();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>调用wait使任务挂起。当条件改变时，调用notifyAll，唤醒所有在mPauseWorkLock上等待的任务。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">setPause</span><span class="params">(<span class="keyword">boolean</span> pause)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">synchronized</span> (mPauseWorkLock) &#123;</span><br><span class="line">        mPauseWork = pause;</span><br><span class="line">        <span class="keyword">if</span> (!pause) &#123;</span><br><span class="line">            mPauseWorkLock.notifyAll();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="3）如何配置线程池？"><a href="#3）如何配置线程池？" class="headerlink" title="3）如何配置线程池？"></a>3）如何配置线程池？</h3><p>使用一个线程工厂ThreadFactory来创建我们自定义名称的线程，根据cpu的核心数指定ThreadPoolExecutor的corePoolSize和maximumPoolSize，使用一个无界双向队列LinkedBlockingDeque存放任务，设置任务的优先级（FIFO或者LIFO），当队列中没有任务时，设置Timeout退出core线程，防止空闲的线程继续占用系统资源。如何在移动端配置线程池，如何在性能和内存折中，需要去实践对比一下不同的方案。比如Google官方的ThreadSample，对任务进行更细粒度的划分，将图片下载和decode分为两个不同的任务，分别放在下载任务线程池和decode任务线程池中并行执行，这样是能获得性能提升还是会导致性能下降？比如Volley使用一个数组保存启动的工作线程，线程的数目是固定的。</p>
+<h2 id="4-图片复用"><a href="#4-图片复用" class="headerlink" title="4.图片复用"></a>4.图片复用</h2><p>比如用户头像，120<em>120图像下载到本地后，如有80</em>80的需求，无需再次下载，直接复用120*120图片。那么是如何实现的呢？<br>假如我需要加载一个地址为“<a href="http://7xsj0t.com2.z0.glb.qiniucdn.com/IMG_20150613_161908.jpeg?imageView2/2/w/320”" target="_blank" rel="external">http://7xsj0t.com2.z0.glb.qiniucdn.com/IMG_20150613_161908.jpeg?imageView2/2/w/320”</a><br>需要先定义一个identity字符串数组，比如[“2/w/120”, “2/w/320”, “2/w/640”], 模式2代表等比缩放， w/120表示宽最多120个像素<br>请求加载图片时指定图片复用信息，如<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mImageView.loadImage(mImageLoader, itemData, sImageReuseInfoManger.create(<span class="string">"2/w/120"</span>));</span><br></pre></td></tr></table></figure></p>
+<p><code>ImageReuseInfoManger</code>创建了一个<code>ImageReuseInfo</code>, 保存可以替换的identity字符串数组。假如当前要加载的图片identity是”2/w/320”, 那么就可以复用disk缓存中identity为”2/w/640”的图片。</p>
+<p>在加载完图片保存到缓存中的时候，会将该identity和url拼接成一个关键字作为缓存文件的名称。注意到这个url地址是原始地址去掉identity。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// read from file cache</span></span><br><span class="line">inputStream = mDiskCacheProvider.getInputStream(fileCacheKey);</span><br><span class="line"></span><br><span class="line"><span class="comment">// try to reuse</span></span><br><span class="line"><span class="keyword">if</span> (inputStream == <span class="keyword">null</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (reuseInfo != <span class="keyword">null</span> &amp;&amp; reuseInfo.getReuseSizeList() != <span class="keyword">null</span> &amp;&amp; reuseInfo.getReuseSizeList().length &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (DEBUG) &#123;</span><br><span class="line">            Log.d(TAG, String.format(MSG_FETCH_TRY_REUSE, imageTask));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">final</span> String[] sizeKeyList = reuseInfo.getReuseSizeList();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; sizeKeyList.length; i++) &#123;</span><br><span class="line">            String size = sizeKeyList[i];</span><br><span class="line">            <span class="keyword">final</span> String key = imageTask.generateFileCacheKeyForReuse(size);</span><br><span class="line">            inputStream = mDiskCacheProvider.getInputStream(key);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (inputStream != <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">if</span> (DEBUG) &#123;</span><br><span class="line">                    Log.d(TAG, String.format(MSG_FETCH_REUSE_SUCCESS, imageTask, size));</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (DEBUG) &#123;</span><br><span class="line">                    Log.d(TAG, String.format(MSG_FETCH_REUSE_FAIL, imageTask, size, key));</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>最后在取disk缓存时，会检查复用信息，比如想要加载地址是“…/2/w/120”的图片，尝试读取key为“…/2/w/320”的缓存图片，没有的话再尝试下一个key为“…/2/w/640”的图片，查询不到复用的缓存就只能从网络下载。大致就是这样<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">deliverResult</span><span class="params">(T result)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (isReset()) &#123;</span><br><span class="line">        releaseResources(result);     </span><br><span class="line">        <span class="keyword">return</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    T oldResult = mResult; </span><br><span class="line">    mResult = result; </span><br><span class="line">    <span class="keyword">if</span> (isStarted()) &#123;</span><br><span class="line">        <span class="keyword">super</span>.deliverResult(result);</span><br><span class="line">    &#125; </span><br><span class="line">    <span class="keyword">if</span> (oldResult != result &amp;&amp; oldResult != <span class="keyword">null</span>) &#123; </span><br><span class="line">        releaseResources(oldResult);</span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br><span class="line">``````java</span><br><span class="line"><span class="meta">@Override</span> </span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onReset</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">super</span>.onReset(); <span class="comment">// Ensure the loader is stopped </span></span><br><span class="line">    onStopLoading();</span><br><span class="line">    releaseResources(mResult);</span><br><span class="line">    mResult = <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br><span class="line">``````java</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DisableableContentObserver</span> <span class="keyword">extends</span> <span class="title">ContentObserver</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ContentObserver mWrappedObserver; </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">boolean</span> mIsEnabled = <span class="keyword">true</span>;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">DisableableContentObserver</span><span class="params">(ContentObserver wrappedObserver)</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">        <span class="keyword">super</span>(<span class="keyword">new</span> Handler());</span><br><span class="line">        mWrappedObserver = wrappedObserver;</span><br><span class="line">    &#125; </span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onChange</span><span class="params">(<span class="keyword">boolean</span> selfChange)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (mIsEnabled) &#123; </span><br><span class="line">            mWrappedObserver.onChange(selfChange); </span><br><span class="line">        &#125; </span><br><span class="line">    &#125; </span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setEnabled</span><span class="params">(<span class="keyword">boolean</span> isEnabled)</span> </span>&#123; </span><br><span class="line">        mIsEnabled = isEnabled; </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyCursorLoader</span> <span class="keyword">extends</span> <span class="title">AbstractLoader</span>&lt;<span class="title">Cursor</span>&gt; </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> DisableableContentObserver mObserver;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MyCursorLoader</span><span class="params">(Context context)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(context);</span><br><span class="line">        mObserver = <span class="keyword">new</span> DisableableContentObserver(<span class="keyword">new</span> ForceLoadContentObserver());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// bunch of setters for uri, projection, selection, etc. Omitted for brevity</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onStartLoading</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        mObserver.setEnabled(<span class="keyword">true</span>);</span><br><span class="line">        <span class="keyword">super</span>.onStartLoading();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onAbandon</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        mObserver.setEnabled(<span class="keyword">false</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onReset</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        mObserver.setEnabled(<span class="keyword">false</span>);</span><br><span class="line">        <span class="keyword">super</span>.onReset();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Cursor <span class="title">loadInBackground</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Cursor cursor = getContext().getContentResolver().query(mUri, mProjection, mSelection,</span><br><span class="line">        mSelectionArgs, mSortOrder);</span><br><span class="line">        <span class="keyword">if</span> (cursor != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// Ensure the cursor window is filled</span></span><br><span class="line">            cursor.getCount();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> cursor;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onNewDataDelivered</span><span class="params">(Cursor data)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onNewDataDelivered(data);</span><br><span class="line">        data.registerContentObserver(mObserver);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><a href="http://dev.bizo.com/2014/06/cached-thread-pool-considered-harmlful.html" target="_blank" rel="external">Executors.newCachedThreadPool有毒</a> - Executors.newCachedThreadPool() considered harmful<br><a href="http://developer.android.com/training/multiple-threads/create-threadpool.html" target="_blank" rel="external">ThreadSample</a> - Google官方最佳实践系列之使用多线程<br><a href="http://cube-sdk.liaohuqiu.net/cn/imageloader/" target="_blank" rel="external">ImageLoader文档</a> - Cube SDK官方文档<br><a href="http://developer.qiniu.com/code/v6/api/kodo-api/image/imageview2.html" target="_blank" rel="external">七牛文档</a> - 图片基本处理</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2014/11/07/how-to-build-rest-client/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">如何构建一个REST客户端</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+
+
+
+<div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="image-loader-in-cube-sdk_1" data-title="浅析Cube SDK里的ImageLoader组件是如何加载图片的（一）" data-url="http://sonaive.com/2016/03/30/image-loader-in-cube-sdk_1/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"true"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+
+
+</div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info">
+    	<div class="footer-left">
+    		&copy; 2016 So Naive
+    	</div>
+      	<div class="footer-right">
+      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
+      	</div>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+
+<script>
+	var yiliaConfig = {
+		fancybox: true,
+		mathjax: true,
+		animate: false,
+		isHome: false,
+		isPost: true,
+		isArchive: false,
+		isTag: false,
+		isCategory: false,
+		open_in_new: false
+	}
+</script>
+<script src="http://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  </div>
+</body>
+</html>

@@ -124,6 +124,69 @@
 
       <div class="body-wrap">
   
+    <article id="post-image-loader-in-cube-sdk_1" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2016/03/30/image-loader-in-cube-sdk_1/" class="article-date">
+  	<time datetime="2016-03-30T15:35:11.000Z" itemprop="datePublished">2016-03-30</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/03/30/image-loader-in-cube-sdk_1/">浅析Cube SDK里的ImageLoader组件是如何加载图片的（一）</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="为什么使用轻量级的库？"><a href="#为什么使用轻量级的库？" class="headerlink" title="为什么使用轻量级的库？"></a>为什么使用轻量级的库？</h1><p>通常我会选择一些成熟的、功能丰富的框架，而这些框架通常是一些重量级的库，也许很多功能你根本用不到，而这些需求之外的功能直接导致了代码体积的增长。也许使用Proguard能移除没有使用的代码，但是类之间如果存在复杂的依赖耦合关系，Proguard还能起到多大作用，Who knows. 有人担心以后可能需要用到那些功能，现在的库没法满足需求. OK, 在使用这个库的时候了解是如何设计和实现的，优秀的库都是对扩展开放的，面向接口编程，那么需要新功能的话就扩展它吧，学习其他人造轮子也会提高自己的编程能力。</p>
+<p>曾经一个朋友拿着他们公司大约200kb的类似小米游戏下载软件给我看，我简直无法相信，现在一个功能非常简单的apk动不动就是几兆，能做到这个程度，几乎让人怀疑这个软件的是否专业，然而它在低端机器上表现得都非常流畅。我们费劲心思琢磨如何给apk瘦身，结果增加几个大的jar包就打回了原形，我们要增加第三方统计，友盟的百度的都加上，再加上第三方登录，推送，这些sdk再引用了大量的库比如http组件，json解析，安装包一下子膨胀了几兆，难受但是无奈。</p>
+<h1 id="一个图片加载框架的加载流程"><a href="#一个图片加载框架的加载流程" class="headerlink" title="一个图片加载框架的加载流程"></a>一个图片加载框架的加载流程</h1><pre><code>1. CubeImageView会检查图片是否已经加载过，图片已经加载完成并已经在显示的重复请求直接忽略。
+2. 检查图片是否在内存缓存中，如果再内存中，显示内存中的图片。否则，创建一个ImageTask, 传递给 ImageLoader, ImageTaskExecutor会处理这个任务。
+3. ImageTaskExecutor 会用后台线程处理这个ImageTask.
+4. ImageProvider负责获取图片，如果图片在本地有文件缓存，那么直接从本地文件加载；否则从网络下载，存文件缓存。
+5. 获取到图片之后，存内存缓存，通知加载完成。收到加载完成通知后，ImageView就可以显示图片了。
+</code></pre><p>根据这个加载流程，从核心类入手，逐个分析实现这样一个图片加载框架，我们关注的一些细节问题。<br>
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a  href="/2016/03/30/image-loader-in-cube-sdk_1/#more">more >></a>
+        </p>
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+
+  
     <article id="post-how-to-build-rest-client" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
@@ -165,10 +228,7 @@
 <li>你的应用可以在后台运行。这意味着如果要从服务器更新数据，当从服务器取得数据后，应用可以通知用户，让他们知道有数据可用。</li>
 <li>应用和网络的连接稳定性有限。当网络较差时，请求可能失败。而android应用可以在后台进行多次重试，让用户在使用浏览器多次按刷按钮的痛苦中解放出来。</li>
 <li>应用可以将从网络中取得资源，比如JSON, 或者二进制，或者XML格式的内容解析并存储在数据库中。因此，当你想取得新数据时，你就可以选择获取比数据库中数据更新的或者更老旧的数据，而不是和数据库中缓存相同的数据。这样你就不用获得所有html，就不用花长时间去下载javascript.</li>
-<li>最后，你的应用可以和android操作系统在使用上保持一致性。</li>
-</ul>
-<h1 id="新手应该避免的"><a href="#新手应该避免的" class="headerlink" title="新手应该避免的"></a>新手应该避免的</h1><p>你是一个Java程序员。翻看了一下Android SDK,你对自己说，“我知道什么是activity,这有什么难的？我将创建一个activity, 知道REST方法执行耗时，因为会连接服务器，所以我会开启一个线程来执行。你决定这个线程是Activity里的内部类，并将取得的数据存储在内存中。</p>
-<p>当你把app跑起来了，它运行得很快，没有崩溃，那么这为什么正确的方法？你得理解Android操作系统是如何工作的，Android操作系统是设计运行在有限资源的设备上的，当系统要启动一个新应用，并且内存不够时，它将决定强制关闭一个已经存在的应用。那么它如何作出这个决定？答案是，你要帮助操作系统做出决定。如果你的应用没有前台运行的activity，不向用户展示，没有执行一些操作，那么就会安全关闭。</p>
+<li>最后，你的应用可以和android操作系统在使用上保持一致性。
       
     </div>
     
@@ -294,16 +354,7 @@
 <ol>
 <li>你完全不知道android应用该怎么写，在主线程里去执行耗时操作</li>
 <li>使用AsyncTask:<br>你的app在屏幕方向改变的时候崩溃了，于是你google到stackoverflow上的答案并锁定了屏幕方向，接着你加上了容易出错的代码，在Activity中detach,attach AsyncTask.</li>
-<li>使用CursorLoader<br>从android HoneyComb到Kitkat,Loader Framework中的Loader子类都只有孤零零的CusorLoader.很可能你会使用其他的异步操作，而不仅仅是通过ContentProvider.你也许想要访问SharedPreferences,读文件或者请求访问web API.那样的话，你需要Loader<SomeOtherDataThanCursor>,但正确实现它会有点复杂。<br>我将带你完整过一遍整个流程，理解Loaders是如何工作的，为你的Loaders实现一个正确的基类，实现一个修复所有问题的CursorLoader,并扩展使其具备通知多个Uri的能力。这将是一篇长博客，所以拿一杯你喜欢的饮料边看边喝吧。</li>
-</ol>
-<h2 id="Loaders"><a href="#Loaders" class="headerlink" title="Loaders"></a>Loaders</h2><p>Loader应该要做到三件事：</p>
-<ol>
-<li>在后台线程里加载数据</li>
-<li>缓存已经加载的数据，这样就不会在屏幕方向变化的时候重新加载一遍了。</li>
-<li>如果可行，监控数据源并在适当的时候重新加载最新的数据。</li>
-</ol>
-<p>Loader类自身并没有在后台线程里加载数据的机制，或者你自己实现，或者你继承AsyncTaskLoader.这部分内容就涵盖了我们需求列表第一点。</p>
-<p>AsyncTaskLoader并没有处理好第二点。事实上AsyncTaskLoader远远没有到达功能完全，比如这种看上去非常合理的实现并不能起作用。</p>
+<li>使用CursorLoader<br>从android HoneyComb到Kitkat,Loader Framework中的Loader子类都只有孤零零的CusorLoader.很可能你会使用其他的异步操作，而不仅仅是通过ContentProvider.你也许想要访问SharedPreferences,读文件或者请求访问web API.那样的话，你需要Loader<SomeOtherDataThanCursor>,但正确实现它会有点复杂。<br>我将带你完整过一遍整个流程，理解Loaders是如何工作的，为你的Loaders实现一个正确的基类，实现一个修复所有问题的CursorLoader,并扩展使其具备通知多个Uri的能力。这将是一篇长博客，所以拿一杯你喜欢的饮料边看边喝吧。
       
     </div>
     
