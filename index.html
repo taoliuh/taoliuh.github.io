@@ -120,6 +120,64 @@
 
       <div class="body-wrap">
   
+    <article id="post-sparse-array-analysis" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2016/05/04/sparse-array-analysis/" class="article-date">
+  	<time datetime="2016-05-04T01:33:07.000Z" itemprop="datePublished">2016-05-04</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/05/04/sparse-array-analysis/">SparseArray源码分析</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <blockquote>
+<p><code>SparseArray</code>映射<Integer, Object>键值对。区别于对象数组，索引可以是非连续的。与使用<code>HashMap</code>映射Integer类型的key相比，使用<code>SpaseArray</code>存储效率更高，一方面它避免了自动对int型键自动装箱，另一方面它的数据结构不依赖额外的<code>Map.Entry</code>对象。</p>
+<p>注意到这个容器使用数组保持映射关系，使用二分搜索寻找键。这种实现不适合存储大量数据项。与传统的HashMap比起来要慢，因为使用二分搜索查找，增加和移除操作需要在数组中插入和删除元素。存储上百条数据，性能差距不明显，不到50%.<br>
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a  href="/2016/05/04/sparse-array-analysis/#more">more >></a>
+        </p>
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+
+  
     <article id="post-disk-lru-cache-analysis" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">

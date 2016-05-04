@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://sonaive.com/2016/05/04/sparse-array-analysis/</loc>
+    
+    <lastmod>2016-05-04T01:36:30.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://sonaive.com/2016/05/04/disk-lru-cache-analysis/</loc>
     
     <lastmod>2016-05-04T01:27:08.000Z</lastmod>
