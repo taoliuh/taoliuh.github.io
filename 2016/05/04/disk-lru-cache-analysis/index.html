@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" >
+  <title>DiskLruCache源码分析 | So Naive</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="一个在文件系统上使用确定数量空间的缓存，每个cache entry包含一个字符串key和一个固定数字值。每个key必须匹配正则表达式[a-z0-9_-]{1,64}. 值表示为字节序列，可以通过流或者文件访问。每个值的长度在0和Integer.MAX_VALUE之间。
+缓存将数据存储在文件系统的一个文件夹中。缓存对这个文件夹必须是独占的，缓存可以删除或者覆盖文件夹中的文件。多个进程在同一时间使用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DiskLruCache源码分析">
+<meta property="og:url" content="http://sonaive.com/2016/05/04/disk-lru-cache-analysis/index.html">
+<meta property="og:site_name" content="So Naive">
+<meta property="og:description" content="一个在文件系统上使用确定数量空间的缓存，每个cache entry包含一个字符串key和一个固定数字值。每个key必须匹配正则表达式[a-z0-9_-]{1,64}. 值表示为字节序列，可以通过流或者文件访问。每个值的长度在0和Integer.MAX_VALUE之间。
+缓存将数据存储在文件系统的一个文件夹中。缓存对这个文件夹必须是独占的，缓存可以删除或者覆盖文件夹中的文件。多个进程在同一时间使用">
+<meta property="og:updated_time" content="2016-05-04T01:15:25.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="DiskLruCache源码分析">
+<meta name="twitter:description" content="一个在文件系统上使用确定数量空间的缓存，每个cache entry包含一个字符串key和一个固定数字值。每个key必须匹配正则表达式[a-z0-9_-]{1,64}. 值表示为字节序列，可以通过流或者文件访问。每个值的长度在0和Integer.MAX_VALUE之间。
+缓存将数据存储在文件系统的一个文件夹中。缓存对这个文件夹必须是独占的，缓存可以删除或者覆盖文件夹中的文件。多个进程在同一时间使用">
+  
+    <link rel="alternative" href="/atom.xml" title="So Naive" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+	<header id="header" class="inner">
+		<a href="/" class="profilepic">
+			
+			<img src="/assets/img/avatar.jpg" class="js-avatar" style="width: 100%;height: 100%;opacity: 1;">
+			
+		</a>
+
+		<hgroup>
+		  <h1 class="header-author"><a href="/">So Naive</a></h1>
+		</hgroup>
+
+		
+
+		
+
+		<div class="switch-area">
+			<div class="switch-wrap">
+				<section class="switch-part switch-part1">
+					<nav class="header-menu">
+						<ul>
+						
+							<li><a href="/">主页</a></li>
+				        
+							<li><a href="/archives">所有文章</a></li>
+				        
+							<li><a href="/about/">关于我</a></li>
+				        
+						</ul>
+					</nav>
+					<nav class="header-nav">
+						<div class="social">
+							
+								<a class="github" target="_blank" href="https://github.com/taoliuh" title="github">github</a>
+					        
+								<a class="weibo" target="_blank" href="http://weibo.com/u/3190235471?is_all=1" title="weibo">weibo</a>
+					        
+						</div>
+					</nav>
+				</section>
+				
+				
+				
+				
+
+				
+			</div>
+		</div>
+	</header>				
+</div>
+
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+  	<div class="overlay">
+  		<div class="slider-trigger"></div>
+  		<h1 class="header-author js-mobile-header hide">So Naive</h1>
+  	</div>
+	<div class="intrude-less">
+		<header id="header" class="inner">
+			<div class="profilepic">
+			
+				<img src="/assets/img/avatar.jpg" class="js-avatar" style="width: 100%;height: 100%;opacity: 1;">
+			
+			</div>
+			<hgroup>
+			  <h1 class="header-author">So Naive</h1>
+			</hgroup>
+			
+			<nav class="header-menu">
+				<ul>
+				
+					<li><a href="/">主页</a></li>
+		        
+					<li><a href="/archives">所有文章</a></li>
+		        
+					<li><a href="/about/">关于我</a></li>
+		        
+		        <div class="clearfix"></div>
+				</ul>
+			</nav>
+			<nav class="header-nav">
+				<div class="social">
+					
+						<a class="github" target="_blank" href="https://github.com/taoliuh" title="github">github</a>
+			        
+						<a class="weibo" target="_blank" href="http://weibo.com/u/3190235471?is_all=1" title="weibo">weibo</a>
+			        
+				</div>
+			</nav>
+		</header>				
+	</div>
+</nav>
+
+      <div class="body-wrap"><article id="post-disk-lru-cache-analysis" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2016/05/04/disk-lru-cache-analysis/" class="article-date">
+  	<time datetime="2016-05-04T01:08:59.000Z" itemprop="datePublished">2016-05-04</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      DiskLruCache源码分析
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+        
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <blockquote>
+<p>一个在文件系统上使用确定数量空间的缓存，每个cache entry包含一个字符串key和一个固定数字值。每个key必须匹配正则表达式<code>[a-z0-9_-]{1,64}</code>. 值表示为字节序列，可以通过流或者文件访问。每个值的长度在<em>0</em>和<em>Integer.MAX_VALUE</em>之间。</p>
+<p>缓存将数据存储在文件系统的一个文件夹中。缓存对这个文件夹必须是独占的，缓存可以删除或者覆盖文件夹中的文件。多个进程在同一时间使用同一个缓存会导致错误。<br><a id="more"></a></p>
+<p>缓存限制了存储到文件系统的字节数量。当存储的字节数超出了上限，缓存会在后台删除一些entries直到符合上限。这个上限并不严格：在等待文件被删除的过程中，缓存可以暂时超限。这个上限并不包含文件系统开销或者缓存日志，所以对存储空间敏感的应用应该设置一个保守的上限。</p>
+<p>这个类会对一些I/O错误容错。如果文件丢失，对应的entries会从缓存中丢掉。当在缓存中写入值的时候发生了错误，edit操作会没有任何提示失败。调用者需要处理其他问题，捕获IOException并正确处理。</p>
+</blockquote>
+<p>既然是LRU Cache，那么怎么少得了<code>LinkedHashMap</code>这个数据结构呢？</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> LinkedHashMap&lt;String, Entry&gt; lruEntries =</span><br><span class="line">			<span class="keyword">new</span> LinkedHashMap&lt;String, Entry&gt;(<span class="number">0</span>, <span class="number">0.75f</span>, <span class="keyword">true</span>);</span><br></pre></td></tr></table></figure>
+<p><code>LinkedHashMap</code>设置accessOrder为true, 遍历的下一个元素就是Least Recently Used Element. 注意到Map里存放的<code>Entry</code>, 那么什么是<code>Entry</code>呢?</p>
+<h2 id="Entry"><a href="#Entry" class="headerlink" title="Entry"></a>Entry</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">Entry</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> String key;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/** Lengths of this entry's files. */</span></span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span>[] lengths;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/** True if this entry has ever been published. */</span></span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">boolean</span> readable;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/** The ongoing edit or null if this entry is not being edited. */</span></span><br><span class="line">	<span class="keyword">private</span> Editor currentEditor;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/** The sequence number of the most recently committed edit to this entry. */</span></span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">long</span> sequenceNumber;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">private</span> <span class="title">Entry</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.key = key;</span><br><span class="line">		<span class="keyword">this</span>.lengths = <span class="keyword">new</span> <span class="keyword">long</span>[valueCount];</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">public</span> File <span class="title">getCleanFile</span><span class="params">(<span class="keyword">int</span> i)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> File(directory, key + <span class="string">"."</span> + i);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> File <span class="title">getDirtyFile</span><span class="params">(<span class="keyword">int</span> i)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> File(directory, key + <span class="string">"."</span> + i + <span class="string">".tmp"</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Entry对象一个key可以对应多个本地磁盘文件，采用<em>key + “.” + i</em>的形式保存要存储的文件，乍一想我好像并没有这样奇葩的需求啊，同一个文件我为什么要分开存储？找不到使用场景还真难以理解作者的设计意图。</p>
+<p>OkHttp对磁盘缓存的用法彻底揭开了我的疑惑，对每一个response分两个文件存储，以.0和.1的结尾的文件名区分，分别存储响应的头部和实体部分，方便读取和处理(<a href="http://souly.cn/技术博文/2015/09/08/okhttp缓存浅析/" target="_blank" rel="external">点击查看OkHttp缓存处理</a>). <em>getCleanFile</em>和<em>getDirtyFile</em>表示以索引数字结尾的文件，也就是最后缓存写入的成员变量文件。</p>
+<p>所以lengths成员变量表示一个key对应的多个文件的长度，readable成员变量表示文件是否可读，在完成一次成功的编辑（编辑代表磁盘存储操作）这个变量会被置为true, currentEditor成员变量表示当前entry是否正在被编辑，sequenceNumber成员变量表示最近一次编辑的序号。</p>
+<h2 id="DiskLruCache如何存储文件到磁盘"><a href="#DiskLruCache如何存储文件到磁盘" class="headerlink" title="DiskLruCache如何存储文件到磁盘"></a>DiskLruCache如何存储文件到磁盘</h2><p>可以看下Universal Image Loader是如何往磁盘中存储图片的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">save</span><span class="params">(String imageUri, InputStream imageStream, IoUtils.CopyListener listener)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">	DiskLruCache.Editor editor = cache.edit(getKey(imageUri));</span><br><span class="line">	<span class="keyword">if</span> (editor == <span class="keyword">null</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	OutputStream os = <span class="keyword">new</span> BufferedOutputStream(editor.newOutputStream(<span class="number">0</span>), bufferSize);</span><br><span class="line">	<span class="keyword">boolean</span> copied = <span class="keyword">false</span>;</span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">		copied = IoUtils.copyStream(imageStream, os, listener, bufferSize);</span><br><span class="line">	&#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">		IoUtils.closeSilently(os);</span><br><span class="line">		<span class="keyword">if</span> (copied) &#123;</span><br><span class="line">			editor.commit();</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			editor.abort();</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> copied;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>首先根据图片的uri生成一个合法的key, 调用edit方法获取一个<code>DiskLruCache.Editor</code>对象，通过editor获取一个输出流，读取输入流中的字节数据写入到输出流，最后调用commit方法完成日志相关的操作。可以看出，<code>Editor</code>负责的是准备和善后工作，工具类<code>IoUtils</code>真正将数据写入到了缓存。</p>
+<h2 id="Editor"><a href="#Editor" class="headerlink" title="Editor"></a>Editor</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">Editor</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> Entry entry;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">boolean</span>[] written;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">boolean</span> hasErrors;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">boolean</span> committed;</span><br><span class="line">	...</span><br><span class="line">	<span class="comment">/**</span><br><span class="line">	 * Returns a new unbuffered output stream to write the value at</span><br><span class="line">	 * &#123;<span class="doctag">@code</span> index&#125;. If the underlying output stream encounters errors</span><br><span class="line">	 * when writing to the filesystem, this edit will be aborted when</span><br><span class="line">	 * &#123;<span class="doctag">@link</span> #commit&#125; is called. The returned output stream does not throw</span><br><span class="line">	 * IOExceptions.</span><br><span class="line">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> OutputStream <span class="title">newOutputStream</span><span class="params">(<span class="keyword">int</span> index)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">		<span class="keyword">synchronized</span> (DiskLruCache.<span class="keyword">this</span>) &#123;</span><br><span class="line">			<span class="keyword">if</span> (entry.currentEditor != <span class="keyword">this</span>) &#123;</span><br><span class="line">				<span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException();</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> (!entry.readable) &#123;</span><br><span class="line">				written[index] = <span class="keyword">true</span>;</span><br><span class="line">			&#125;</span><br><span class="line">			File dirtyFile = entry.getDirtyFile(index);</span><br><span class="line">			FileOutputStream outputStream;</span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">				outputStream = <span class="keyword">new</span> FileOutputStream(dirtyFile);</span><br><span class="line">			&#125; <span class="keyword">catch</span> (FileNotFoundException e) &#123;</span><br><span class="line">				<span class="comment">// Attempt to recreate the cache directory.</span></span><br><span class="line">				directory.mkdirs();</span><br><span class="line">				<span class="keyword">try</span> &#123;</span><br><span class="line">					outputStream = <span class="keyword">new</span> FileOutputStream(dirtyFile);</span><br><span class="line">				&#125; <span class="keyword">catch</span> (FileNotFoundException e2) &#123;</span><br><span class="line">					<span class="comment">// We are unable to recover. Silently eat the writes.</span></span><br><span class="line">					<span class="keyword">return</span> NULL_OUTPUT_STREAM;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">new</span> FaultHidingOutputStream(outputStream);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Editor负责编辑Entry对象的值，调用newOutputStream创建输出流时，将written成员变量置为true, 表示entry可写，在对输出流写入数据时发生错误时会将标记变量hasErrors置为true, 完成一次编辑操作将committed置为true.</p>
+<p>创建输出流检查当前Editor是否正确，否则抛出异常，创建一个dirty文件，指定输出流写入的目标文件就是dirty文件，最后创建出一个隐藏错误的输出流，或者当创建输出流失败时返回一个do nothing的NULL_OUTPUT_STREAM.</p>
+<h2 id="DiskLruCache如何读取缓存"><a href="#DiskLruCache如何读取缓存" class="headerlink" title="DiskLruCache如何读取缓存"></a>DiskLruCache如何读取缓存</h2><p>同样，先看Universal Image Loader是如何读缓存的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> File <span class="title">get</span><span class="params">(String imageUri)</span> </span>&#123;</span><br><span class="line">	DiskLruCache.Snapshot snapshot = <span class="keyword">null</span>;</span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">		snapshot = cache.get(getKey(imageUri));</span><br><span class="line">		<span class="keyword">return</span> snapshot == <span class="keyword">null</span> ? <span class="keyword">null</span> : snapshot.getFile(<span class="number">0</span>);</span><br><span class="line">	&#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">		L.e(e);</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">	&#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> (snapshot != <span class="keyword">null</span>) &#123;</span><br><span class="line">			snapshot.close();</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>调用DiskLruCache的get方法获取对应key的一个Snapshot（快照）对象，然后根据对应的index获取File对象。</p>
+<h2 id="Snapshot"><a href="#Snapshot" class="headerlink" title="Snapshot"></a>Snapshot</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** A snapshot of the values for an entry. */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">Snapshot</span> <span class="keyword">implements</span> <span class="title">Closeable</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> String key;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> sequenceNumber;</span><br><span class="line">	<span class="keyword">private</span> File[] files;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> InputStream[] ins;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span>[] lengths;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Snapshot就是一个entry的值的快照，包含成员变量key, sequenceNumber, 缓存文件files及文件长度，缓存文件的输入流。通过get方法可以获取到对应key的一个Snapshot.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span><br><span class="line"> * Returns a snapshot of the entry named &#123;<span class="doctag">@code</span> key&#125;, or null if it doesn't</span><br><span class="line"> * exist is not currently readable. If a value is returned, it is moved to</span><br><span class="line"> * the head of the LRU queue.</span><br><span class="line"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> Snapshot <span class="title">get</span><span class="params">(String key)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">	checkNotClosed();</span><br><span class="line">	validateKey(key);</span><br><span class="line">	Entry entry = lruEntries.get(key);</span><br><span class="line">	<span class="keyword">if</span> (entry == <span class="keyword">null</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!entry.readable) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Open all streams eagerly to guarantee that we see a single published</span></span><br><span class="line">	<span class="comment">// snapshot. If we opened streams lazily then the streams could come</span></span><br><span class="line">	<span class="comment">// from different edits.</span></span><br><span class="line">	File[] files = <span class="keyword">new</span> File[valueCount];</span><br><span class="line">	InputStream[] ins = <span class="keyword">new</span> InputStream[valueCount];</span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">		File file;</span><br><span class="line">		<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; valueCount; i++) &#123;</span><br><span class="line">			file = entry.getCleanFile(i);</span><br><span class="line">			files[i] = file;</span><br><span class="line">			ins[i] = <span class="keyword">new</span> FileInputStream(file);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125; <span class="keyword">catch</span> (FileNotFoundException e) &#123;</span><br><span class="line">		<span class="comment">// A file must have been deleted manually!</span></span><br><span class="line">		<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; valueCount; i++) &#123;</span><br><span class="line">			<span class="keyword">if</span> (ins[i] != <span class="keyword">null</span>) &#123;</span><br><span class="line">				Util.closeQuietly(ins[i]);</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="keyword">break</span>;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">new</span> Snapshot(key, entry.sequenceNumber, files, ins, entry.lengths);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>首先做一般性检查（日志writer是否关闭，key是否合法），获取entry的clean文件，打开输入流，发布一个snapshot对象，调用getFile或者getInputStream可以获取到文件或者输入流对象。</p>
+<h2 id="DiskLruCache如何移除缓存"><a href="#DiskLruCache如何移除缓存" class="headerlink" title="DiskLruCache如何移除缓存"></a>DiskLruCache如何移除缓存</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span><br><span class="line"> * Drops the entry for &#123;<span class="doctag">@code</span> key&#125; if it exists and can be removed. Entries</span><br><span class="line"> * actively being edited cannot be removed.</span><br><span class="line"> *</span><br><span class="line"> * <span class="doctag">@return</span> true if an entry was removed.</span><br><span class="line"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">boolean</span> <span class="title">remove</span><span class="params">(String key)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">	checkNotClosed();</span><br><span class="line">	validateKey(key);</span><br><span class="line">	Entry entry = lruEntries.get(key);</span><br><span class="line">	<span class="keyword">if</span> (entry == <span class="keyword">null</span> || entry.currentEditor != <span class="keyword">null</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; valueCount; i++) &#123;</span><br><span class="line">		File file = entry.getCleanFile(i);</span><br><span class="line">		<span class="keyword">if</span> (file.exists() &amp;&amp; !file.delete()) &#123;</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> IOException(<span class="string">"failed to delete "</span> + file);</span><br><span class="line">		&#125;</span><br><span class="line">		size -= entry.lengths[i];</span><br><span class="line">		fileCount--;</span><br><span class="line">		entry.lengths[i] = <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	...</span><br><span class="line">	lruEntries.remove(key);</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>移除一条entry, 正在被编辑的entry不可移除，删除clean文件，更新缓存大小size和文件数目fileCount.</p>
+<p>围绕着Cache对象，其实就三个操作edit（将文件存到磁盘），get（从磁盘读取缓存文件），remove（从磁盘移除缓存）。但是还不够，如何避免缓存错误？如何在程序重新启动时恢复缓存数据（包括LRU顺序）？</p>
+<h2 id="日志"><a href="#日志" class="headerlink" title="日志"></a>日志</h2><p>DiskLruCache引入了日志journal解决了上述问题。</p>
+<blockquote>
+<p> 使用一个名字为”journal”的日志文件。日志文件看起来像这样<br>libcore.io.DiskLruCache<br>1<br>100<br>2</p>
+<p>CLEAN 3400330d1dfc7f3f7f4b8d4d803dfcf6 832 21054<br>DIRTY 335c4c6028171cfddfbaae1a9c313c52<br>CLEAN 335c4c6028171cfddfbaae1a9c313c52 3934 2342<br>REMOVE 335c4c6028171cfddfbaae1a9c313c52<br>DIRTY 1ab96a171faeeee38496d8b330771a7a<br>CLEAN 1ab96a171faeeee38496d8b330771a7a 1600 234<br>READ 335c4c6028171cfddfbaae1a9c313c52<br>READ 3400330d1dfc7f3f7f4b8d4d803dfcf6</p>
+<p>前五行组成了日志文件头，分别是字符串常量”libcore.io.DiskLruCache”, cache版本，应用程序版本，value数目和一个空行。</p>
+<p>接下来的行是记录了缓存entry的状态。每行包含用空格分隔的值：状态，key, 可选的指定状态值。<br>        o DIRTY 记录一条entry正被创建或更新。每一个成功的DIRTY操作应该跟随着CLEAN或REMOVE操作<br>          否则需要删除临时文件<br>        o CLEAN 记录一条entry被成功发布或者成功读取。CLEAN行跟随着每个值的长度大小。<br>        o READ 记录LRU访问顺序<br>        o REMOVE 记录被删除的entry</p>
+<p>当发生cache操作的时候就会添加日志操作记录，时不时通过删除冗余行整理压缩日志。在压缩过程中会使用临时文件”journal.tmp”; 在打开cache的时候就会删除这个临时文件。</p>
+</blockquote>
+<p>前面的分析过程都略过了日志文件的操作，下面来分析通过操作日志是如何解决上述问题的。</p>
+<p>edit操作，最后会向日志写入一条DIRTY操作记录</p>
+<blockquote>
+<p>journalWriter.append(DIRTY + ‘ ‘ + key + ‘\n’);</p>
+</blockquote>
+<p>get操作，最后会向日志写入一条READ操作记录</p>
+<blockquote>
+<p>journalWriter.append(READ + ‘ ‘ + key + ‘\n’);</p>
+</blockquote>
+<p>remove操作，最后会向日志写入一条REMOVE操作记录</p>
+<blockquote>
+<p>journalWriter.append(REMOVE + ‘ ‘ + key + ‘\n’);</p>
+</blockquote>
+<p>同时在edit操作结束后，接下来的commit操作会添加CLEAN或REMOVE操作记录</p>
+<blockquote>
+<p>journalWriter.append(CLEAN + ‘ ‘ + key + ‘\n’);</p>
+</blockquote>
+<p>如果磁盘缓存文件大小超过上限或者文件数目超过上限，或者日志冗余行超过上限就会把清理文件和重建日志的任务cleanupCallable提交到线程池中执行。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (size &gt; maxSize || fileCount &gt; maxFileCount || journalRebuildRequired()) &#123;</span><br><span class="line">	executorService.submit(cleanupCallable);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Callable&lt;Void&gt; cleanupCallable = <span class="keyword">new</span> Callable&lt;Void&gt;() &#123;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> Void <span class="title">call</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">		<span class="keyword">synchronized</span> (DiskLruCache.<span class="keyword">this</span>) &#123;</span><br><span class="line">			<span class="keyword">if</span> (journalWriter == <span class="keyword">null</span>) &#123;</span><br><span class="line">				<span class="keyword">return</span> <span class="keyword">null</span>; <span class="comment">// Closed.</span></span><br><span class="line">			&#125;</span><br><span class="line">			trimToSize();</span><br><span class="line">			trimToFileCount();</span><br><span class="line">			<span class="keyword">if</span> (journalRebuildRequired()) &#123;</span><br><span class="line">				rebuildJournal();</span><br><span class="line">				redundantOpCount = <span class="number">0</span>;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>以上这些对日志的操作避免了缓存错误。<br>调用open创建DiskLruCache，会逐行读取日志信息，将状态为CLEAN/DIRTY/READ的记录恢复为entry，添加到LinkedHashMap集合中。调用processJournal删除混乱的entry，DIRTY记录行后面不是跟着CLEAN或者REMOVE记录行的属于混乱的记录。这样就在内存中恢复了上次访问状态的视图。</p>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><p><a href="http://www.rainstops.com/android/2015/03/06/DiskLruCache.html" target="_blank" rel="external">DiskLruCahe的实现</a></p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2016/04/01/Volley Q&A/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Volley Q&amp;A</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+
+
+
+<div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="disk-lru-cache-analysis" data-title="DiskLruCache源码分析" data-url="http://sonaive.com/2016/05/04/disk-lru-cache-analysis/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"true"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+
+
+</div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info">
+    	<div class="footer-left">
+    		&copy; 2016 So Naive
+    	</div>
+      	<div class="footer-right">
+      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
+      	</div>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+
+<script>
+	var yiliaConfig = {
+		fancybox: true,
+		mathjax: true,
+		animate: false,
+		isHome: false,
+		isPost: true,
+		isArchive: false,
+		isTag: false,
+		isCategory: false,
+		open_in_new: false
+	}
+</script>
+<script src="http://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  </div>
+</body>
+</html>

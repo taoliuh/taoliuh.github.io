@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://sonaive.com/2016/05/04/disk-lru-cache-analysis/</loc>
+    
+    <lastmod>2016-05-04T01:15:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://sonaive.com/about/index.html</loc>
     
     <lastmod>2016-04-09T01:35:01.000Z</lastmod>
