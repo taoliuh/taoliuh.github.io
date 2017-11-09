@@ -4,9 +4,9 @@
   
   <link href="/atom.xml" rel="self"/>
   
-  <link href="http://sonaive.com/"/>
+  <link href="http://sonaive.me/"/>
   <updated>2017-04-17T09:23:48.000Z</updated>
-  <id>http://sonaive.com/</id>
+  <id>http://sonaive.me/</id>
   
   <author>
     <name>So Naive</name>
@@ -17,8 +17,8 @@
   
   <entry>
     <title>SparseArray源码分析</title>
-    <link href="http://sonaive.com/2016/05/04/sparse-array-analysis/"/>
-    <id>http://sonaive.com/2016/05/04/sparse-array-analysis/</id>
+    <link href="http://sonaive.me/2016/05/04/sparse-array-analysis/"/>
+    <id>http://sonaive.me/2016/05/04/sparse-array-analysis/</id>
     <published>2016-05-04T01:33:07.000Z</published>
     <updated>2017-04-17T09:23:48.000Z</updated>
     
@@ -74,8 +74,8 @@
   
   <entry>
     <title>DiskLruCache源码分析</title>
-    <link href="http://sonaive.com/2016/05/04/disk-lru-cache-analysis/"/>
-    <id>http://sonaive.com/2016/05/04/disk-lru-cache-analysis/</id>
+    <link href="http://sonaive.me/2016/05/04/disk-lru-cache-analysis/"/>
+    <id>http://sonaive.me/2016/05/04/disk-lru-cache-analysis/</id>
     <published>2016-05-04T01:08:59.000Z</published>
     <updated>2016-05-04T01:27:08.000Z</updated>
     
@@ -152,8 +152,8 @@
   
   <entry>
     <title>Volley Q&amp;A</title>
-    <link href="http://sonaive.com/2016/04/01/Volley%20Q&A/"/>
-    <id>http://sonaive.com/2016/04/01/Volley Q&A/</id>
+    <link href="http://sonaive.me/2016/04/01/Volley%20Q&A/"/>
+    <id>http://sonaive.me/2016/04/01/Volley Q&A/</id>
     <published>2016-04-01T09:49:30.000Z</published>
     <updated>2016-04-01T15:05:09.000Z</updated>
     
@@ -221,8 +221,8 @@
   
   <entry>
     <title>浅析Cube SDK里的ImageLoader组件是如何加载图片的（一）</title>
-    <link href="http://sonaive.com/2016/03/30/image-loader-in-cube-sdk_1/"/>
-    <id>http://sonaive.com/2016/03/30/image-loader-in-cube-sdk_1/</id>
+    <link href="http://sonaive.me/2016/03/30/image-loader-in-cube-sdk_1/"/>
+    <id>http://sonaive.me/2016/03/30/image-loader-in-cube-sdk_1/</id>
     <published>2016-03-30T15:35:11.000Z</published>
     <updated>2016-04-01T09:32:11.000Z</updated>
     
@@ -271,8 +271,8 @@
   
   <entry>
     <title>如何构建一个REST客户端</title>
-    <link href="http://sonaive.com/2014/11/07/how-to-build-rest-client/"/>
-    <id>http://sonaive.com/2014/11/07/how-to-build-rest-client/</id>
+    <link href="http://sonaive.me/2014/11/07/how-to-build-rest-client/"/>
+    <id>http://sonaive.me/2014/11/07/how-to-build-rest-client/</id>
     <published>2014-11-07T04:11:44.000Z</published>
     <updated>2016-04-01T09:18:56.000Z</updated>
     
@@ -344,8 +344,8 @@
   
   <entry>
     <title>如何防止内存泄漏</title>
-    <link href="http://sonaive.com/2014/08/26/how-to-avoid-memeory-leak/"/>
-    <id>http://sonaive.com/2014/08/26/how-to-avoid-memeory-leak/</id>
+    <link href="http://sonaive.me/2014/08/26/how-to-avoid-memeory-leak/"/>
+    <id>http://sonaive.me/2014/08/26/how-to-avoid-memeory-leak/</id>
     <published>2014-08-26T02:53:10.000Z</published>
     <updated>2014-08-26T09:25:40.000Z</updated>
     
@@ -391,8 +391,8 @@
   
   <entry>
     <title>Loader框架</title>
-    <link href="http://sonaive.com/2014/08/25/the-loader-framework/"/>
-    <id>http://sonaive.com/2014/08/25/the-loader-framework/</id>
+    <link href="http://sonaive.me/2014/08/25/the-loader-framework/"/>
+    <id>http://sonaive.me/2014/08/25/the-loader-framework/</id>
     <published>2014-08-25T03:23:47.000Z</published>
     <updated>2016-04-01T09:16:12.000Z</updated>
     
@@ -468,8 +468,8 @@
   
   <entry>
     <title>搭建我的 github + octopress 博客</title>
-    <link href="http://sonaive.com/2014/07/28/build-blog-with-github-plus-octopress/"/>
-    <id>http://sonaive.com/2014/07/28/build-blog-with-github-plus-octopress/</id>
+    <link href="http://sonaive.me/2014/07/28/build-blog-with-github-plus-octopress/"/>
+    <id>http://sonaive.me/2014/07/28/build-blog-with-github-plus-octopress/</id>
     <published>2014-07-28T13:00:27.000Z</published>
     <updated>2014-08-26T02:14:18.000Z</updated>
     
