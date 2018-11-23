@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://sonaive.me/2018/11/21/android-architecture-components-analysis/</loc>
+    
+    <lastmod>2018-11-23T08:28:21.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://sonaive.me/2016/05/04/sparse-array-analysis/</loc>
     
     <lastmod>2017-04-17T09:23:48.000Z</lastmod>

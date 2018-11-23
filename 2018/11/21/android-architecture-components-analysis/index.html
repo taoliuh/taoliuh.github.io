@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" >
+  <title>Android Architecture Components源码分析 | So Naive</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="在分析Android Architecture Component这个框架之前，先想想这个框架能为我们做什么，我们为什么要按照这套框架模式去构建app？它和MVP架构有什么区别？
+MVP, Clean, AAC架构的特点：MVP架构的特点是面向接口编程。在View, Presenter, Model之间分别用接口做衔接，当有新的底层实现时，能够无缝替换。
+此外，MVP的View和Model并不产生">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android Architecture Components源码分析">
+<meta property="og:url" content="http://sonaive.me/2018/11/21/android-architecture-components-analysis/index.html">
+<meta property="og:site_name" content="So Naive">
+<meta property="og:description" content="在分析Android Architecture Component这个框架之前，先想想这个框架能为我们做什么，我们为什么要按照这套框架模式去构建app？它和MVP架构有什么区别？
+MVP, Clean, AAC架构的特点：MVP架构的特点是面向接口编程。在View, Presenter, Model之间分别用接口做衔接，当有新的底层实现时，能够无缝替换。
+此外，MVP的View和Model并不产生">
+<meta property="og:image" content="https://developer.android.com/images/topic/libraries/architecture/lifecycle-states.png">
+<meta property="og:image" content="http://sonaive.me/assets/img/Lifecycle.jpg">
+<meta property="og:image" content="http://sonaive.me/assets/img/LifecycleSeq.jpg">
+<meta property="og:image" content="http://sonaive.me/assets/img/ProcessLifecycleOwnerSeq.jpg">
+<meta property="og:updated_time" content="2018-11-23T08:28:21.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android Architecture Components源码分析">
+<meta name="twitter:description" content="在分析Android Architecture Component这个框架之前，先想想这个框架能为我们做什么，我们为什么要按照这套框架模式去构建app？它和MVP架构有什么区别？
+MVP, Clean, AAC架构的特点：MVP架构的特点是面向接口编程。在View, Presenter, Model之间分别用接口做衔接，当有新的底层实现时，能够无缝替换。
+此外，MVP的View和Model并不产生">
+<meta name="twitter:image" content="https://developer.android.com/images/topic/libraries/architecture/lifecycle-states.png">
+  
+    <link rel="alternative" href="/atom.xml" title="So Naive" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+	<header id="header" class="inner">
+		<a href="/" class="profilepic">
+			
+			<img src="/assets/img/avatar.jpg" class="js-avatar" style="width: 100%;height: 100%;opacity: 1;">
+			
+		</a>
+
+		<hgroup>
+		  <h1 class="header-author"><a href="/">So Naive</a></h1>
+		</hgroup>
+
+		
+
+		
+
+		<div class="switch-area">
+			<div class="switch-wrap">
+				<section class="switch-part switch-part1">
+					<nav class="header-menu">
+						<ul>
+						
+							<li><a href="/">主页</a></li>
+				        
+							<li><a href="/archives">所有文章</a></li>
+				        
+						</ul>
+					</nav>
+					<nav class="header-nav">
+						<div class="social">
+							
+								<a class="github" target="_blank" href="https://github.com/taoliuh" title="github">github</a>
+					        
+								<a class="weibo" target="_blank" href="http://weibo.com/u/3190235471?is_all=1" title="weibo">weibo</a>
+					        
+						</div>
+					</nav>
+				</section>
+				
+				
+				
+				
+
+				
+			</div>
+		</div>
+	</header>				
+</div>
+
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+  	<div class="overlay">
+  		<div class="slider-trigger"></div>
+  		<h1 class="header-author js-mobile-header hide">So Naive</h1>
+  	</div>
+	<div class="intrude-less">
+		<header id="header" class="inner">
+			<div class="profilepic">
+			
+				<img src="/assets/img/avatar.jpg" class="js-avatar" style="width: 100%;height: 100%;opacity: 1;">
+			
+			</div>
+			<hgroup>
+			  <h1 class="header-author">So Naive</h1>
+			</hgroup>
+			
+			<nav class="header-menu">
+				<ul>
+				
+					<li><a href="/">主页</a></li>
+		        
+					<li><a href="/archives">所有文章</a></li>
+		        
+		        <div class="clearfix"></div>
+				</ul>
+			</nav>
+			<nav class="header-nav">
+				<div class="social">
+					
+						<a class="github" target="_blank" href="https://github.com/taoliuh" title="github">github</a>
+			        
+						<a class="weibo" target="_blank" href="http://weibo.com/u/3190235471?is_all=1" title="weibo">weibo</a>
+			        
+				</div>
+			</nav>
+		</header>				
+	</div>
+</nav>
+
+      <div class="body-wrap"><article id="post-android-architecture-components-analysis" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2018/11/21/android-architecture-components-analysis/" class="article-date">
+  	<time datetime="2018-11-21T07:05:10.000Z" itemprop="datePublished">2018-11-21</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Android Architecture Components源码分析
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+        
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在分析Android Architecture Component这个框架之前，先想想这个框架能为我们做什么，我们为什么要按照这套框架模式去构建app？它和MVP架构有什么区别？</p>
+<p>MVP, Clean, AAC架构的特点：<br>MVP架构的特点是面向接口编程。在View, Presenter, Model之间分别用接口做衔接，当有新的底层实现时，能够无缝替换。</p>
+<p>此外，MVP的View和Model并不产生依赖，因此可以说是对View和Model做了解耦。</p>
+<p>但MVP架构有其局限性。MVP需要创建太多的类和接口,并且每次通信都需要繁琐的通过接口传递信息</p>
+<p>google sample提供了一个todo-mvp sample, 里面有MVP+RxJava实现，Clean架构实现。这两种架构方式我都实践过，MVP+RxJava所有业务,UI逻辑都包含在Presenter里面, Presenter直接干预了UI在拿到数据后做什么，使得逻辑上没有发生解耦，正常来说，解耦意味着Presenter的只能边界仅限返回结果数据，由UI来根据数据处理UI逻辑。<br><a id="more"></a></p>
+<p>Clean架构将业务逻辑分解成可重用的更小粒度的usecase, 业务逻辑的职能被转移到领域层，Presenter则弱化为ViewModel, 作为代理数据请求和衔接数据回调的缓冲区。</p>
+<p>Clean 架构的特点是单向依赖、数据驱动编程。 View -&gt; ViewModel -&gt; Usecase -&gt; Model.</p>
+<p>但 Clean 架构也有不足：粒度太细 。一个 Usecase 受限于请求参数，因而只能处理一类请求。View请求求的数据包含几种类型，就至少需要准备几个 Usecase。Usecase是依据当前View对数据的需求量身定制的，且形式大同小异，因此Usecase的复用率极低，项目会因而急剧的增加类和重复代码。</p>
+<p>AAC也是数据驱动编程。直接在View中写个观察者回调，以接收结果数据并处理UI逻辑。MVP架构中Presenter直接引用View，告诉View该显示什么，而AAC中的View持有ViewModel的引用，ViewModel不需要持有View的引用，而是根据View绑定的事件进行流式调用，这也意味着MVP架构中以来的回调接口也用不着了。</p>
+<p>数据的消费者应该知道生产者，但生产者（ViewModel）不知道也不关心谁消费了数据。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">subscribeUi</span><span class="params">(ProductListViewModel viewModel)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Update the list when the data changes</span></span><br><span class="line">    viewModel.getProducts().observe(<span class="keyword">this</span>, <span class="keyword">new</span> Observer&lt;List&lt;ProductEntity&gt;&gt;() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onChanged</span><span class="params">(@Nullable List&lt;ProductEntity&gt; myProducts)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (myProducts != <span class="keyword">null</span>) &#123;</span><br><span class="line">                mBinding.setIsLoading(<span class="keyword">false</span>);</span><br><span class="line">                mProductAdapter.setProductList(myProducts);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                mBinding.setIsLoading(<span class="keyword">true</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// espresso does not know how to wait for data binding's loop so we execute changes</span></span><br><span class="line">            <span class="comment">// sync.</span></span><br><span class="line">            mBinding.executePendingBindings();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>除此之外，Fragment.setRetainInstance(boolean retain<br>)方法设置为true, 保证Configuration change的时候与该fragment关联的数据能够保存。</p>
+<p>AAC是由一系列库组成，能够帮助我们管理UI组件的生命周期和处理数据存留。生命周期感知组件可以管理Activity和Fragment的生命周期，在configuration change的时候可以保留现场数据并重新更新UI，避免内存泄漏。</p>
+<p>使用LiveData构造数据对象，当底层数据发生变化时就会通知更新UI.</p>
+<p>ViewModel存储UI相关的数据，在app旋转时不会销毁。</p>
+<p>Lifecycle如何与Activity, Fragment的生命周期绑定？<br>Lifecycle定义了一个拥有Android生命周期的对象，Activity, Fragment实现了LifecycleOwner接口，可以直接访问到Lifecycle.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ComponentActivity</span> <span class="keyword">extends</span> <span class="title">Activity</span></span><br><span class="line">        <span class="keyword">implements</span> <span class="title">LifecycleOwner</span> </span>&#123;</span><br><span class="line">        </span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> Lifecycle <span class="title">getLifecycle</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> mLifecycleRegistry;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Lifecycle定义了两个枚举类型Event和State, State可以看做图的节点，State定义了一系列与生命周期相关的状态，Event则可以看做图的路径。Lifecycle负责保存并更新当前生命周期状态。</p>
+<p>刚好在Activity.onDestroy()调用之前，达到DESTROYED状态，处于DESTROYED状态的Lifecycle对象不会再传递任何事件Event.</p>
+<p>INITIALIZED状态在Lifecycle对象已创建但还未调用Activity.onCreate()之前。</p>
+<p>在Activity.onCreate()调用之后，Activity.onStop()调用之前处于CREATED状态。</p>
+<p>在Activity.onStart()调用之后，Activity.onPause()调用之前处于STARTED状态。</p>
+<p>在Activity.onResume()调用之后处于RESUMED状态。</p>
+<p>接下来看看状态的转化。</p>
+<p>什么时候处于INITIALIZED状态呢？</p>
+<p><img src="https://developer.android.com/images/topic/libraries/architecture/lifecycle-states.png" alt=""></p>
+<p>首先来看一下生命周期感知组件的类关系图<br><img src="/assets/img/Lifecycle.jpg">  </p>
+<p>Lifecycle定义成一个拥有Android生命周期的接口对象。Fragment或FragmentActivity实现了LifecycleOwner接口，并通过getLifecycle方法获取LifecycleRegistry对象。LifecycleRegistry实现了Lifecycle，能够处理多个观察者。</p>
+<p>LifecycleRegistry定义了内部嵌套类ObserverWithState，通过调用addObserver方法我们将参数LifecycleObserver对象传入，并封装成了ObserverWithState对象，在handleLifecycleEvent接收到外部传入的Event事件，计算出目标状态，最后调用GenericLifecycleObserver的onStateChanged方法通知状态的变换。</p>
+<img src="/assets/img/LifecycleSeq.jpg">
+<p>当应用程序启动时，会注册清单文件里声明的ContentProvider, 在框架里就是ProcessLifecycleOwnerInitializer, 可以到app/build/outputs/logs/manifest-merge-debug-report.txt找到ProcessLifecycleOwnerInitializer类所在的清单文件位置，最终清单文件会合并到打包完成的应用中来。<br><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">&lt;manifest xmlns:android="http://schemas.android.com/apk/res/android"</span><br><span class="line">    package="androidx.lifecycle.process" &gt;</span><br><span class="line"></span><br><span class="line">    &lt;uses-sdk android:minSdkVersion="14" /&gt;</span><br><span class="line"></span><br><span class="line">    &lt;application&gt;</span><br><span class="line">        &lt;provider</span><br><span class="line">            android:name="androidx.lifecycle.ProcessLifecycleOwnerInitializer"</span><br><span class="line">            android:authorities="$&#123;applicationId&#125;.lifecycle-process"</span><br><span class="line">            android:exported="false"</span><br><span class="line">            android:multiprocess="true" /&gt;</span><br><span class="line">    &lt;/application&gt;</span><br><span class="line"></span><br><span class="line">&lt;/manifest&gt;</span><br></pre></td></tr></table></figure></p>
+<p>ProcessLifecycleOwnerInitializer只干一件事，注册ActivityLifecycleCallbacks，具体是使用一个无UI的ReportFragment, 利用Fragment的生命周期回调将Lifecycle Event发布出去。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ProcessLifecycleOwnerInitializer</span> <span class="keyword">extends</span> <span class="title">ContentProvider</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onCreate</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		LifecycleDispatcher.init(getContext());</span><br><span class="line">        ProcessLifecycleOwner.init(getContext());</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>ProcessLifecycleOwner提供了整个应用进程的生命周期，Lifecycle.Event.ON_CREATE事件只会发布一次，而Lifecycle.Event.ON_DESTROY则不会发布。Lifecycle.Event.ON_PAUSE和Lifecycle.Event.ON_STOP事件则会在上一个Activity走完对应生命周期方法后延时发布。这个延时时间足够长，确保当configuration change导致Activity销毁，重建时不会重新发布对应事件。</p>
+<p>当我们需要监听应用从后台回到前台或者从前台到后台时，这个类就变得很有用。<br>我们可以在自定义Application中添加观察者，监听到ON_START事件表示应用回到前台，监听ON_STOP事件表示应用回到了后台。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BasicApp</span> <span class="keyword">extends</span> <span class="title">Application</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String TAG = BasicApp.class.getSimpleName();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate();</span><br><span class="line"></span><br><span class="line">        ProcessLifecycleOwner.get().getLifecycle().addObserver(<span class="keyword">new</span> GenericLifecycleObserver() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onStateChanged</span><span class="params">(LifecycleOwner source, Lifecycle.Event event)</span> </span>&#123;</span><br><span class="line">                Log.d(TAG, <span class="string">"ProcessLifecycleOwner onStateChanged, event: "</span> + event);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<img src="/assets/img/ProcessLifecycleOwnerSeq.jpg">
+
+      
+    </div>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2016/05/04/sparse-array-analysis/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">SparseArray源码分析</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+
+
+
+<div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="android-architecture-components-analysis" data-title="Android Architecture Components源码分析" data-url="http://sonaive.me/2018/11/21/android-architecture-components-analysis/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"true"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+
+
+</div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info">
+    	<div class="footer-left">
+    		&copy; 2018 So Naive
+    	</div>
+      	<div class="footer-right">
+      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
+      	</div>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+
+<script>
+	var yiliaConfig = {
+		fancybox: true,
+		mathjax: true,
+		animate: false,
+		isHome: false,
+		isPost: true,
+		isArchive: false,
+		isTag: false,
+		isCategory: false,
+		open_in_new: false
+	}
+</script>
+<script src="http://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  </div>
+</body>
+</html>
