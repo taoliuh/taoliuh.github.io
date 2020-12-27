@@ -1,173 +1,222 @@
 <!DOCTYPE html>
-<html>
+<html lang="">
 <head>
-  <meta charset="utf-8">
-  
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" >
-  <title>SparseArray源码分析 | So Naive</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="SparseArray映射键值对。区别于对象数组，索引可以是非连续的。与使用HashMap映射Integer类型的key相比，使用SpaseArray存储效率更高，一方面它避免了自动对int型键自动装箱，另一方面它的数据结构不依赖额外的Map.Entry对象。
-注意到这个容器使用数组保持映射关系，使用二分搜索寻找键。这种实现不适合存储大量数据项。与传统的HashMap比起来要慢，因为使用二分搜索">
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"sonaive.me","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="SparseArray映射&lt;Integer, Object&gt;键值对。区别于对象数组，索引可以是非连续的。与使用HashMap映射Integer类型的key相比，使用SpaseArray存储效率更高，一方面它避免了自动对int型键自动装箱，另一方面它的数据结构不依赖额外的Map.Entry对象。   注意到这个容器使用数组保持映射关系，使用二分搜索寻找键。这种实现不适合存储大量数据项。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="SparseArray源码分析">
 <meta property="og:url" content="http://sonaive.me/2016/05/04/sparse-array-analysis/index.html">
 <meta property="og:site_name" content="So Naive">
-<meta property="og:description" content="SparseArray映射键值对。区别于对象数组，索引可以是非连续的。与使用HashMap映射Integer类型的key相比，使用SpaseArray存储效率更高，一方面它避免了自动对int型键自动装箱，另一方面它的数据结构不依赖额外的Map.Entry对象。
-注意到这个容器使用数组保持映射关系，使用二分搜索寻找键。这种实现不适合存储大量数据项。与传统的HashMap比起来要慢，因为使用二分搜索">
-<meta property="og:updated_time" content="2017-04-17T09:23:48.000Z">
+<meta property="og:description" content="SparseArray映射&lt;Integer, Object&gt;键值对。区别于对象数组，索引可以是非连续的。与使用HashMap映射Integer类型的key相比，使用SpaseArray存储效率更高，一方面它避免了自动对int型键自动装箱，另一方面它的数据结构不依赖额外的Map.Entry对象。   注意到这个容器使用数组保持映射关系，使用二分搜索寻找键。这种实现不适合存储大量数据项。">
+<meta property="og:locale">
+<meta property="article:published_time" content="2016-05-04T01:33:07.000Z">
+<meta property="article:modified_time" content="2017-04-17T09:23:48.000Z">
+<meta property="article:author" content="So Naive">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="SparseArray源码分析">
-<meta name="twitter:description" content="SparseArray映射键值对。区别于对象数组，索引可以是非连续的。与使用HashMap映射Integer类型的key相比，使用SpaseArray存储效率更高，一方面它避免了自动对int型键自动装箱，另一方面它的数据结构不依赖额外的Map.Entry对象。
-注意到这个容器使用数组保持映射关系，使用二分搜索寻找键。这种实现不适合存储大量数据项。与传统的HashMap比起来要慢，因为使用二分搜索">
+
+<link rel="canonical" href="http://sonaive.me/2016/05/04/sparse-array-analysis/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>SparseArray源码分析 | So Naive</title>
   
-    <link rel="alternative" href="/atom.xml" title="So Naive" type="application/atom+xml">
-  
-  
-    <link rel="icon" href="/favicon.png">
-  
-  <link rel="stylesheet" href="/css/style.css">
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="So Naive" type="application/atom+xml">
 </head>
 
-<body>
-  <div id="container">
-    <div class="left-col">
-    <div class="overlay"></div>
-<div class="intrude-less">
-	<header id="header" class="inner">
-		<a href="/" class="profilepic">
-			
-			<img src="/assets/img/avatar.jpg" class="js-avatar" style="width: 100%;height: 100%;opacity: 1;">
-			
-		</a>
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
 
-		<hgroup>
-		  <h1 class="header-author"><a href="/">So Naive</a></h1>
-		</hgroup>
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
 
-		
+  <div class="site-meta">
 
-		
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">So Naive</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
 
-		<div class="switch-area">
-			<div class="switch-wrap">
-				<section class="switch-part switch-part1">
-					<nav class="header-menu">
-						<ul>
-						
-							<li><a href="/">主页</a></li>
-				        
-							<li><a href="/archives">所有文章</a></li>
-				        
-						</ul>
-					</nav>
-					<nav class="header-nav">
-						<div class="social">
-							
-								<a class="github" target="_blank" href="https://github.com/taoliuh" title="github">github</a>
-					        
-								<a class="weibo" target="_blank" href="http://weibo.com/u/3190235471?is_all=1" title="weibo">weibo</a>
-					        
-						</div>
-					</nav>
-				</section>
-				
-				
-				
-				
-
-				
-			</div>
-		</div>
-	</header>				
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
 </div>
 
-    </div>
-    <div class="mid-col">
-      <nav id="mobile-nav">
-  	<div class="overlay">
-  		<div class="slider-trigger"></div>
-  		<h1 class="header-author js-mobile-header hide">So Naive</h1>
-  	</div>
-	<div class="intrude-less">
-		<header id="header" class="inner">
-			<div class="profilepic">
-			
-				<img src="/assets/img/avatar.jpg" class="js-avatar" style="width: 100%;height: 100%;opacity: 1;">
-			
-			</div>
-			<hgroup>
-			  <h1 class="header-author">So Naive</h1>
-			</hgroup>
-			
-			<nav class="header-menu">
-				<ul>
-				
-					<li><a href="/">主页</a></li>
-		        
-					<li><a href="/archives">所有文章</a></li>
-		        
-		        <div class="clearfix"></div>
-				</ul>
-			</nav>
-			<nav class="header-nav">
-				<div class="social">
-					
-						<a class="github" target="_blank" href="https://github.com/taoliuh" title="github">github</a>
-			        
-						<a class="weibo" target="_blank" href="http://weibo.com/u/3190235471?is_all=1" title="weibo">weibo</a>
-			        
-				</div>
-			</nav>
-		</header>				
-	</div>
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
 </nav>
 
-      <div class="body-wrap"><article id="post-sparse-array-analysis" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2016/05/04/sparse-array-analysis/" class="article-date">
-  	<time datetime="2016-05-04T01:33:07.000Z" itemprop="datePublished">2016-05-04</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 class="article-title" itemprop="name">
-      SparseArray源码分析
-    </h1>
-  
 
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://sonaive.me/2016/05/04/sparse-array-analysis/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="So Naive">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="So Naive">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          SparseArray源码分析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2016-05-04 09:33:07" itemprop="dateCreated datePublished" datetime="2016-05-04T09:33:07+08:00">2016-05-04</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2017-04-17 17:23:48" itemprop="dateModified" datetime="2017-04-17T17:23:48+08:00">2017-04-17</time>
+              </span>
+
+          
+
+        </div>
       </header>
-      
-      <div class="article-info article-info-post">
-        
-        
 
-        <div class="clearfix"></div>
-      </div>
-      
     
-    <div class="article-entry" itemprop="articleBody">
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
       
         <blockquote>
-<p><code>SparseArray</code>映射<integer, object="">键值对。区别于对象数组，索引可以是非连续的。与使用<code>HashMap</code>映射Integer类型的key相比，使用<code>SpaseArray</code>存储效率更高，一方面它避免了自动对int型键自动装箱，另一方面它的数据结构不依赖额外的<code>Map.Entry</code>对象。</integer,></p>
-<p>注意到这个容器使用数组保持映射关系，使用二分搜索寻找键。这种实现不适合存储大量数据项。与传统的HashMap比起来要慢，因为使用二分搜索查找，增加和移除操作需要在数组中插入和删除元素。存储上百条数据，性能差距不明显，不到50%.<br><a id="more"></a><br>为了提高性能，容器增加了移除key的优化：它不是立即压缩紧凑数组，而是将移除的entry标记为已删除。对于相同key, 这条数据可以被重用，或者在一次gc()操作的过程中紧凑所有移除的数据。当数组增长时或集合容量增加，或者获取数据值的时候，gc()操作就会在适当的时候执行。</p>
-<p>使用<em>keyAt(int)</em>, <em>valueAt(int)</em>可以遍历容器中的数据。以升序索引值使用<em>keyAt(int)</em>遍历key将返回升序的key, 使用升序key遍历将相应返回升序value.</p>
+<p><code>SparseArray</code>映射&lt;Integer, Object&gt;键值对。区别于对象数组，索引可以是非连续的。与使用<code>HashMap</code>映射Integer类型的key相比，使用<code>SpaseArray</code>存储效率更高，一方面它避免了自动对int型键自动装箱，另一方面它的数据结构不依赖额外的<code>Map.Entry</code>对象。</p>
+</blockquote>
+<blockquote>
+<p>注意到这个容器使用数组保持映射关系，使用二分搜索寻找键。这种实现不适合存储大量数据项。与传统的HashMap比起来要慢，因为使用二分搜索查找，增加和移除操作需要在数组中插入和删除元素。存储上百条数据，性能差距不明显，不到50%.</p>
+</blockquote>
+<a id="more"></a>
+<blockquote>
+<p>为了提高性能，容器增加了移除key的优化：它不是立即压缩紧凑数组，而是将移除的entry标记为已删除。对于相同key, 这条数据可以被重用，或者在一次gc()操作的过程中紧凑所有移除的数据。当数组增长时或集合容量增加，或者获取数据值的时候，gc()操作就会在适当的时候执行。</p>
+</blockquote>
+<blockquote>
+<p>使用<em>keyAt(int)</em>, *valueAt(int)<em>可以遍历容器中的数据。以升序索引值使用</em>keyAt(int)*遍历key将返回升序的key, 使用升序key遍历将相应返回升序value.</p>
 </blockquote>
 <p>SparseArray, 即稀疏数组，与HashMap不同的是，没有实现Map接口，不属于集合框架。定义了类似于集合中常用接口，比如<em>get(int)</em>, <em>put(int, Object)</em>, <em>remove(int)</em>, <em>size()</em>, <em>clear()</em>.</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Object DELETED = <span class="keyword">new</span> Object();<span class="comment">// 移除标记</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">boolean</span> mGarbage = <span class="keyword">false</span>;<span class="comment">// 执行gc()操作标记，当从数组中删除元素后置为true</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span>[] mKeys;<span class="comment">// key数组</span></span><br><span class="line"><span class="keyword">private</span> Object[] mValues;<span class="comment">// value数组</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> mSize;<span class="comment">// 数组大小</span></span><br></pre></td></tr></table></figure>
 <p>构造函数创建了初始大小为initialCapacity的key, value数组。但是capacity的计算，SparseArray与SparseArrayCompat调用了不同的实现.</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">binarySearch</span><span class="params">(<span class="keyword">int</span>[] array, <span class="keyword">int</span> size, <span class="keyword">int</span> 	value)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> lo = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">int</span> hi = size - <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (lo &lt;= hi) &#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="keyword">int</span> mid = (lo + hi) &gt;&gt;&gt; <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">final</span> <span class="keyword">int</span> midVal = array[mid];</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (midVal &lt; value) &#123;</span><br><span class="line">            lo = mid + <span class="number">1</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (midVal &gt; value) &#123;</span><br><span class="line">            hi = mid - <span class="number">1</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> mid;  <span class="comment">// value found</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> ~lo;  <span class="comment">// value not present</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>基本上SparseArray的所有操作都是基于二分搜索，二分搜索的前提是数组是有序的，如果value在数组中存在，返回索引位置，否则最后计算出的lo值表示插入位置（0 &lt;= low &lt;= size），如果查找不到，取反返回负数。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span><br><span class="line"> * Removes the mapping from the specified key, if there was any.</span><br><span class="line"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">delete</span><span class="params">(<span class="keyword">int</span> key)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i =  ContainerHelpers.binarySearch(mKeys, mSize, key);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (i &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (mValues[i] != DELETED) &#123;</span><br><span class="line">            mValues[i] = DELETED;</span><br><span class="line">            mGarbage = <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Removes the mapping from the specified key, if there was any.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">delete</span><span class="params">(<span class="keyword">int</span> key)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i =  ContainerHelpers.binarySearch(mKeys, mSize, key);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (i &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (mValues[i] != DELETED) &#123;</span><br><span class="line">            mValues[i] = DELETED;</span><br><span class="line">            mGarbage = <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>如果key存在的话，移除指定key的映射关系，将对应的value标记为DELETED, mGarbage标记设置为true, 等待下一次操作触发gc()操作。</p>
-<p>什么是gc操作？<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">gc</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Log.e("SparseArray", "gc start with " + 	mSize);</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> n = mSize;</span><br><span class="line">    <span class="keyword">int</span> o = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">int</span>[] keys = mKeys;</span><br><span class="line">    Object[] values = mValues;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; n; i++) &#123;</span><br><span class="line">        Object val = values[i];</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (val != DELETED) &#123;</span><br><span class="line">            <span class="keyword">if</span> (i != o) &#123;</span><br><span class="line">                keys[o] = keys[i];</span><br><span class="line">                values[o] = val;</span><br><span class="line">                values[i] = <span class="keyword">null</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            o++;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    mGarbage = <span class="keyword">false</span>;</span><br><span class="line">    mSize = o;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Log.e("SparseArray", "gc end with " + mSize);</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>什么是gc操作？</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">gc</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Log.e(&quot;SparseArray&quot;, &quot;gc start with &quot; + 	mSize);</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> n = mSize;</span><br><span class="line">    <span class="keyword">int</span> o = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">int</span>[] keys = mKeys;</span><br><span class="line">    Object[] values = mValues;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; n; i++) &#123;</span><br><span class="line">        Object val = values[i];</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (val != DELETED) &#123;</span><br><span class="line">            <span class="keyword">if</span> (i != o) &#123;</span><br><span class="line">                keys[o] = keys[i];</span><br><span class="line">                values[o] = val;</span><br><span class="line">                values[i] = <span class="keyword">null</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            o++;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    mGarbage = <span class="keyword">false</span>;</span><br><span class="line">    mSize = o;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Log.e(&quot;SparseArray&quot;, &quot;gc end with &quot; + mSize);</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>这里所谓的gc就是对数组进行整理压缩，使用两路指针i和o，将未标记为DELETED的映射都向数组的左端移动，很像垃圾收集器的标记-整理算法。</p>
 <p>那么哪些操作会触发调用gc()呢？</p>
 <ul>
@@ -183,131 +232,204 @@
 </ul>
 <p>所有的访问操作在mGarbage为true的时候都会调用gc操作，此外put, append操作在数组需要扩容的时候也会调用gc操作。</p>
 <p>直接看SparseArrayCompat的put和append实现。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span><br><span class="line"> * Adds a mapping from the specified key to the specified value,</span><br><span class="line"> * replacing the previous mapping from the specified key if there</span><br><span class="line"> * was one.</span><br><span class="line"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">put</span><span class="params">(<span class="keyword">int</span> key, E value)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i =  ContainerHelpers.binarySearch(mKeys, mSize, key);</span><br><span class="line">    <span class="comment">// key存在，更新value</span></span><br><span class="line">    <span class="keyword">if</span> (i &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">        mValues[i] = value;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 取反计算插入位置</span></span><br><span class="line">        i = ~i;</span><br><span class="line">        <span class="comment">// 插入位置非尾部且原来映射已经不存在了，则更新key-value</span></span><br><span class="line">        <span class="keyword">if</span> (i &lt; mSize &amp;&amp; mValues[i] == DELETED) &#123;</span><br><span class="line">            mKeys[i] = key;</span><br><span class="line">            mValues[i] = value;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 尝试gc一下扩容，重新计算索引</span></span><br><span class="line">        <span class="keyword">if</span> (mGarbage &amp;&amp; mSize &gt;= mKeys.length) &#123;</span><br><span class="line">            gc();</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Search again because indices may have changed.</span></span><br><span class="line">            i = ~ ContainerHelpers.binarySearch(mKeys, mSize, key);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 扩容，每次扩容都是以2的幂次大小扩容，重新映射</span></span><br><span class="line">        <span class="keyword">if</span> (mSize &gt;= mKeys.length) &#123;</span><br><span class="line">            <span class="keyword">int</span> n =  ContainerHelpers.idealIntArraySize(mSize + <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">int</span>[] nkeys = <span class="keyword">new</span> <span class="keyword">int</span>[n];</span><br><span class="line">            Object[] nvalues = <span class="keyword">new</span> Object[n];</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Log.e("SparseArray", "grow " + mKeys.length + " to " + n);</span></span><br><span class="line">            System.arraycopy(mKeys, <span class="number">0</span>, nkeys, <span class="number">0</span>, mKeys.length);</span><br><span class="line">            System.arraycopy(mValues, <span class="number">0</span>, nvalues, <span class="number">0</span>, mValues.length);</span><br><span class="line"></span><br><span class="line">            mKeys = nkeys;</span><br><span class="line">            mValues = nvalues;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 如果插入的位置不是尾部，需要向右移动插入位置后面的所有映射</span></span><br><span class="line">        <span class="keyword">if</span> (mSize - i != <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="comment">// Log.e("SparseArray", "move " + (mSize - i));</span></span><br><span class="line">            System.arraycopy(mKeys, i, mKeys, i + <span class="number">1</span>, mSize - i);</span><br><span class="line">            System.arraycopy(mValues, i, mValues, i + <span class="number">1</span>, mSize - i);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 添加映射关系</span></span><br><span class="line">        mKeys[i] = key;</span><br><span class="line">        mValues[i] = value;</span><br><span class="line">        mSize++;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Adds a mapping from the specified key to the specified value,</span></span><br><span class="line"><span class="comment"> * replacing the previous mapping from the specified key if there</span></span><br><span class="line"><span class="comment"> * was one.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">put</span><span class="params">(<span class="keyword">int</span> key, E value)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i =  ContainerHelpers.binarySearch(mKeys, mSize, key);</span><br><span class="line">    <span class="comment">// key存在，更新value</span></span><br><span class="line">    <span class="keyword">if</span> (i &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">        mValues[i] = value;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 取反计算插入位置</span></span><br><span class="line">        i = ~i;</span><br><span class="line">        <span class="comment">// 插入位置非尾部且原来映射已经不存在了，则更新key-value</span></span><br><span class="line">        <span class="keyword">if</span> (i &lt; mSize &amp;&amp; mValues[i] == DELETED) &#123;</span><br><span class="line">            mKeys[i] = key;</span><br><span class="line">            mValues[i] = value;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 尝试gc一下扩容，重新计算索引</span></span><br><span class="line">        <span class="keyword">if</span> (mGarbage &amp;&amp; mSize &gt;= mKeys.length) &#123;</span><br><span class="line">            gc();</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Search again because indices may have changed.</span></span><br><span class="line">            i = ~ ContainerHelpers.binarySearch(mKeys, mSize, key);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 扩容，每次扩容都是以2的幂次大小扩容，重新映射</span></span><br><span class="line">        <span class="keyword">if</span> (mSize &gt;= mKeys.length) &#123;</span><br><span class="line">            <span class="keyword">int</span> n =  ContainerHelpers.idealIntArraySize(mSize + <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">int</span>[] nkeys = <span class="keyword">new</span> <span class="keyword">int</span>[n];</span><br><span class="line">            Object[] nvalues = <span class="keyword">new</span> Object[n];</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Log.e(&quot;SparseArray&quot;, &quot;grow &quot; + mKeys.length + &quot; to &quot; + n);</span></span><br><span class="line">            System.arraycopy(mKeys, <span class="number">0</span>, nkeys, <span class="number">0</span>, mKeys.length);</span><br><span class="line">            System.arraycopy(mValues, <span class="number">0</span>, nvalues, <span class="number">0</span>, mValues.length);</span><br><span class="line"></span><br><span class="line">            mKeys = nkeys;</span><br><span class="line">            mValues = nvalues;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 如果插入的位置不是尾部，需要向右移动插入位置后面的所有映射</span></span><br><span class="line">        <span class="keyword">if</span> (mSize - i != <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="comment">// Log.e(&quot;SparseArray&quot;, &quot;move &quot; + (mSize - i));</span></span><br><span class="line">            System.arraycopy(mKeys, i, mKeys, i + <span class="number">1</span>, mSize - i);</span><br><span class="line">            System.arraycopy(mValues, i, mValues, i + <span class="number">1</span>, mSize - i);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 添加映射关系</span></span><br><span class="line">        mKeys[i] = key;</span><br><span class="line">        mValues[i] = value;</span><br><span class="line">        mSize++;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>注意到插入映射的key保持了升序，因为每次put操作都会在已有的升序数组中计算插入的位置。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span><br><span class="line"> * Puts a key/value pair into the array, optimizing for the case where</span><br><span class="line"> * the key is greater than all existing keys in the array.</span><br><span class="line"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">append</span><span class="params">(<span class="keyword">int</span> key, E value)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 不是在尾部增加映射</span></span><br><span class="line">    <span class="keyword">if</span> (mSize != <span class="number">0</span> &amp;&amp; key &lt;= mKeys[mSize - <span class="number">1</span>]) &#123;</span><br><span class="line">        put(key, value);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (mGarbage &amp;&amp; mSize &gt;= mKeys.length) &#123;</span><br><span class="line">        gc();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> pos = mSize;</span><br><span class="line">    <span class="keyword">if</span> (pos &gt;= mKeys.length) &#123;</span><br><span class="line">        <span class="keyword">int</span> n =  ContainerHelpers.idealIntArraySize(pos + <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">int</span>[] nkeys = <span class="keyword">new</span> <span class="keyword">int</span>[n];</span><br><span class="line">        Object[] nvalues = <span class="keyword">new</span> Object[n];</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Log.e("SparseArray", "grow " + mKeys.length + " to " + n);</span></span><br><span class="line">        System.arraycopy(mKeys, <span class="number">0</span>, nkeys, <span class="number">0</span>, mKeys.length);</span><br><span class="line">        System.arraycopy(mValues, <span class="number">0</span>, nvalues, <span class="number">0</span>, mValues.length);</span><br><span class="line"></span><br><span class="line">        mKeys = nkeys;</span><br><span class="line">        mValues = nvalues;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    mKeys[pos] = key;</span><br><span class="line">    mValues[pos] = value;</span><br><span class="line">    mSize = pos + <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Puts a key/value pair into the array, optimizing for the case where</span></span><br><span class="line"><span class="comment"> * the key is greater than all existing keys in the array.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">append</span><span class="params">(<span class="keyword">int</span> key, E value)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 不是在尾部增加映射</span></span><br><span class="line">    <span class="keyword">if</span> (mSize != <span class="number">0</span> &amp;&amp; key &lt;= mKeys[mSize - <span class="number">1</span>]) &#123;</span><br><span class="line">        put(key, value);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (mGarbage &amp;&amp; mSize &gt;= mKeys.length) &#123;</span><br><span class="line">        gc();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> pos = mSize;</span><br><span class="line">    <span class="keyword">if</span> (pos &gt;= mKeys.length) &#123;</span><br><span class="line">        <span class="keyword">int</span> n =  ContainerHelpers.idealIntArraySize(pos + <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">int</span>[] nkeys = <span class="keyword">new</span> <span class="keyword">int</span>[n];</span><br><span class="line">        Object[] nvalues = <span class="keyword">new</span> Object[n];</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Log.e(&quot;SparseArray&quot;, &quot;grow &quot; + mKeys.length + &quot; to &quot; + n);</span></span><br><span class="line">        System.arraycopy(mKeys, <span class="number">0</span>, nkeys, <span class="number">0</span>, mKeys.length);</span><br><span class="line">        System.arraycopy(mValues, <span class="number">0</span>, nvalues, <span class="number">0</span>, mValues.length);</span><br><span class="line"></span><br><span class="line">        mKeys = nkeys;</span><br><span class="line">        mValues = nvalues;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    mKeys[pos] = key;</span><br><span class="line">    mValues[pos] = value;</span><br><span class="line">    mSize = pos + <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>append操作没什么特别的，只是针对要插入映射key大于数组中已存在的最大key的情况做了优化，减少了gc操作后重新计算索引的操作。</p>
 <h4 id="为什么在数据量小的时候SparseArray的综合性能相对于HashMap要好？"><a href="#为什么在数据量小的时候SparseArray的综合性能相对于HashMap要好？" class="headerlink" title="为什么在数据量小的时候SparseArray的综合性能相对于HashMap要好？"></a>为什么在数据量小的时候SparseArray的综合性能相对于HashMap要好？</h4><p>SparseArray的主要优势是占用内存小，查询的时间复杂度是O(logn), n为数组的长度, 而HashMap的时间复杂度为O(n), n为发生hash冲突的元素个数。比起来HashMap查询性能更优。HashMap内部数据结构是一个Map.Entry数组，Map.Entry是一个单链表数据结构，维护了键值对，指向下一个元素的引用和key的hash值。每个映射均增加了内存开销。当数据量大的时候，SparseArray gc整理内存，put插入映射都是O(n)的时间复杂度，put操作还会造成数据迁移，而HashMap的时间复杂度为O(1).</p>
 <h4 id="如何计算capacity？"><a href="#如何计算capacity？" class="headerlink" title="如何计算capacity？"></a>如何计算capacity？</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">idealByteArraySize</span><span class="params">(<span class="keyword">int</span> need)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">4</span>; i &lt; <span class="number">32</span>; i++)</span><br><span class="line">        <span class="keyword">if</span> (need &lt;= (<span class="number">1</span> &lt;&lt; i) - <span class="number">12</span>)</span><br><span class="line">            <span class="keyword">return</span> (<span class="number">1</span> &lt;&lt; i) - <span class="number">12</span>;</span><br><span class="line">    <span class="keyword">return</span> need;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>在扩容时计算新的容量大小使用的是上述方法，这个函数是为了方便内存分配，原则是给一个数组分配的内存空间最好是2的n次方大小，至于为什么要减去12, 是因为普通对象需要额外8字节空间管理对象相关信息(对象头部)，数组另加4字节记录数组长度。</p>
 <h4 id="关于SparseArray-LongSparseArray"><a href="#关于SparseArray-LongSparseArray" class="headerlink" title="关于SparseArray, LongSparseArray."></a>关于SparseArray, LongSparseArray.</h4><p>两者实现原理相同，避免了整型，长整型键的自动装箱。</p>
-<p>参考资料：<br><a href="http://bbs.csdn.net/topics/360092303" target="_blank" rel="external">取反与补码</a><br><a href="https://stackoverflow.com/questions/32730919/what-is-the-rationale-behind-the-growing-policy-of-the-sparsearraycompat-in-andr" target="_blank" rel="external">SparseArray growing policy</a><br><a href="http://www.cnblogs.com/zhanjindong/p/3757767.html" target="_blank" rel="external">java对象的大小</a><br><a href="https://android.googlesource.com/platform/libcore/+/jb-mr2-release/luni/src/main/java/libcore/util/EmptyArray.java" target="_blank" rel="external">EmptyArray</a><br><a href="https://android.googlesource.com/platform/frameworks/base.git/+/android-6.0.1_r31/core/java/com/android/internal/util/ArrayUtils.java" target="_blank" rel="external">ArrayUtils</a><br><a href="https://github.com/android/platform_frameworks_base/blob/master/core/java/com/android/internal/util/GrowingArrayUtils.java" target="_blank" rel="external">GrowingArrayUtils</a><br><a href="http://blog.csdn.net/litefish/article/details/44078857" target="_blank" rel="external">idealByteArraySize</a></p>
+<p>参考资料：<br><a target="_blank" rel="noopener" href="http://bbs.csdn.net/topics/360092303">取反与补码</a><br><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/32730919/what-is-the-rationale-behind-the-growing-policy-of-the-sparsearraycompat-in-andr">SparseArray growing policy</a><br><a target="_blank" rel="noopener" href="http://www.cnblogs.com/zhanjindong/p/3757767.html">java对象的大小</a><br><a target="_blank" rel="noopener" href="https://android.googlesource.com/platform/libcore/+/jb-mr2-release/luni/src/main/java/libcore/util/EmptyArray.java">EmptyArray</a><br><a target="_blank" rel="noopener" href="https://android.googlesource.com/platform/frameworks/base.git/+/android-6.0.1_r31/core/java/com/android/internal/util/ArrayUtils.java">ArrayUtils</a><br><a target="_blank" rel="noopener" href="https://github.com/android/platform_frameworks_base/blob/master/core/java/com/android/internal/util/GrowingArrayUtils.java">GrowingArrayUtils</a><br><a target="_blank" rel="noopener" href="http://blog.csdn.net/litefish/article/details/44078857">idealByteArraySize</a></p>
 
-      
     </div>
+
     
-  </div>
-  
     
-<nav id="article-nav">
-  
-    <a href="/2018/11/21/android-architecture-components-analysis/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption"><</strong>
-      <div class="article-nav-title">
+    
+
+      <footer class="post-footer">
+
         
-          Android Architecture Components源码分析
+
+
         
-      </div>
-    </a>
-  
-  
-    <a href="/2016/05/04/disk-lru-cache-analysis/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">DiskLruCache源码分析</div>
-      <strong class="article-nav-caption">></strong>
-    </a>
-  
-</nav>
-
-  
-</article>
-
-
-
-
-
-
-<div class="duoshuo">
-	<!-- 多说评论框 start -->
-	<div class="ds-thread" data-thread-key="sparse-array-analysis" data-title="SparseArray源码分析" data-url="http://sonaive.me/2016/05/04/sparse-array-analysis/"></div>
-	<!-- 多说评论框 end -->
-	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
-	<script type="text/javascript">
-	var duoshuoQuery = {short_name:"true"};
-	(function() {
-		var ds = document.createElement('script');
-		ds.type = 'text/javascript';ds.async = true;
-		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
-		ds.charset = 'UTF-8';
-		(document.getElementsByTagName('head')[0] 
-		 || document.getElementsByTagName('body')[0]).appendChild(ds);
-	})();
-	</script>
-	<!-- 多说公共JS代码 end -->
-</div>
-
-
-
-
-</div>
-      <footer id="footer">
-  <div class="outer">
-    <div id="footer-info">
-    	<div class="footer-left">
-    		&copy; 2018 So Naive
-    	</div>
-      	<div class="footer-right">
-      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
-      	</div>
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2016/05/04/disk-lru-cache-analysis/" rel="prev" title="DiskLruCache源码分析">
+      <i class="fa fa-chevron-left"></i> DiskLruCache源码分析
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/11/21/android-architecture-components-analysis/" rel="next" title="Android Architecture Components源码分析">
+      Android Architecture Components源码分析 <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
-  </div>
-</footer>
-    </div>
+      </footer>
     
-  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  </article>
+  
+  
+  
 
+
+
+          </div>
+          
 
 <script>
-	var yiliaConfig = {
-		fancybox: true,
-		mathjax: true,
-		animate: false,
-		isHome: false,
-		isPost: true,
-		isArchive: false,
-		isTag: false,
-		isCategory: false,
-		open_in_new: false
-	}
-</script>
-<script src="http://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
-<script src="/js/main.js"></script>
-
-
-
-
-
-
-<script type="text/x-mathjax-config">
-MathJax.Hub.Config({
-    tex2jax: {
-        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
-        processEscapes: true,
-        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
     }
-});
-
-MathJax.Hub.Queue(function() {
-    var all = MathJax.Hub.getAllJax(), i;
-    for(i=0; i < all.length; i += 1) {
-        all[i].SourceElement().parentNode.className += ' has-jax';                 
-    }       
-});
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
 </script>
 
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-</script>
-
-
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
   </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%9C%A8%E6%95%B0%E6%8D%AE%E9%87%8F%E5%B0%8F%E7%9A%84%E6%97%B6%E5%80%99SparseArray%E7%9A%84%E7%BB%BC%E5%90%88%E6%80%A7%E8%83%BD%E7%9B%B8%E5%AF%B9%E4%BA%8EHashMap%E8%A6%81%E5%A5%BD%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">为什么在数据量小的时候SparseArray的综合性能相对于HashMap要好？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E8%AE%A1%E7%AE%97capacity%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">如何计算capacity？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%B3%E4%BA%8ESparseArray-LongSparseArray"><span class="nav-number">3.</span> <span class="nav-text">关于SparseArray, LongSparseArray.</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">So Naive</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/taoliuh" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;taoliuh" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:taoliuh@gmail.com" title="E-Mail → mailto:taoliuh@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">So Naive</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
 </body>
 </html>

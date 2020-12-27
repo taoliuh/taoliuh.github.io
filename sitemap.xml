@@ -2,66 +2,84 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://sonaive.me/2020/12/12/the-evolution-of-design-patterns/</loc>
+    
+    <lastmod>2020-12-27</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://sonaive.me/2018/11/21/android-architecture-components-analysis/</loc>
     
-    <lastmod>2018-11-23T09:36:24.000Z</lastmod>
+    <lastmod>2018-12-08</lastmod>
     
   </url>
   
   <url>
     <loc>http://sonaive.me/2016/05/04/sparse-array-analysis/</loc>
     
-    <lastmod>2017-04-17T09:23:48.000Z</lastmod>
+    <lastmod>2017-04-17</lastmod>
     
   </url>
   
   <url>
     <loc>http://sonaive.me/2016/05/04/disk-lru-cache-analysis/</loc>
     
-    <lastmod>2016-05-04T01:27:08.000Z</lastmod>
+    <lastmod>2016-05-04</lastmod>
     
   </url>
   
   <url>
     <loc>http://sonaive.me/2016/04/01/Volley%20Q&A/</loc>
     
-    <lastmod>2016-04-01T15:05:09.000Z</lastmod>
+    <lastmod>2016-04-01</lastmod>
     
   </url>
   
   <url>
     <loc>http://sonaive.me/2016/03/30/image-loader-in-cube-sdk_1/</loc>
     
-    <lastmod>2016-04-01T09:32:11.000Z</lastmod>
+    <lastmod>2016-04-01</lastmod>
     
   </url>
   
   <url>
     <loc>http://sonaive.me/2014/11/07/how-to-build-rest-client/</loc>
     
-    <lastmod>2016-04-01T09:18:56.000Z</lastmod>
+    <lastmod>2016-04-01</lastmod>
     
   </url>
   
   <url>
     <loc>http://sonaive.me/2014/08/25/the-loader-framework/</loc>
     
-    <lastmod>2016-04-01T09:16:12.000Z</lastmod>
+    <lastmod>2016-04-01</lastmod>
     
   </url>
   
   <url>
     <loc>http://sonaive.me/2014/08/26/how-to-avoid-memeory-leak/</loc>
     
-    <lastmod>2014-08-26T09:25:40.000Z</lastmod>
+    <lastmod>2014-08-26</lastmod>
     
   </url>
   
   <url>
     <loc>http://sonaive.me/2014/07/28/build-blog-with-github-plus-octopress/</loc>
     
-    <lastmod>2014-08-26T02:14:18.000Z</lastmod>
+    <lastmod>2014-08-26</lastmod>
     
   </url>
+  
+
+  <url>
+    <loc>http://sonaive.me/</loc>
+    <lastmod>2020-12-27</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  
+
   
 </urlset>

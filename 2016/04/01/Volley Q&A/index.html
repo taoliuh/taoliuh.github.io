@@ -1,161 +1,201 @@
 <!DOCTYPE html>
-<html>
+<html lang="">
 <head>
-  <meta charset="utf-8">
-  
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" >
-  <title>Volley Q&amp;A | So Naive</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"sonaive.me","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
   <meta name="description" content="1. Volley如何做内存优化的？有两个很有意思的类ByteArrayPool和PoolingByteArrayOutputStream, 当从网络取得响应数据流后，将响应数据转换为字节数组存储到NetworkResponse中。Volley适合数据量小，通信频繁的网络操作，如果按传统方式申请内存则分配内存，然后等待垃圾收集器回收，必然会造成频繁GC, 导致内存抖动，性能下降。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Volley Q&A">
-<meta property="og:url" content="http://sonaive.me/2016/04/01/Volley Q&A/index.html">
+<meta property="og:title" content="Volley Q&amp;A">
+<meta property="og:url" content="http://sonaive.me/2016/04/01/Volley%20Q&A/index.html">
 <meta property="og:site_name" content="So Naive">
 <meta property="og:description" content="1. Volley如何做内存优化的？有两个很有意思的类ByteArrayPool和PoolingByteArrayOutputStream, 当从网络取得响应数据流后，将响应数据转换为字节数组存储到NetworkResponse中。Volley适合数据量小，通信频繁的网络操作，如果按传统方式申请内存则分配内存，然后等待垃圾收集器回收，必然会造成频繁GC, 导致内存抖动，性能下降。">
-<meta property="og:updated_time" content="2016-04-01T15:05:09.000Z">
+<meta property="og:locale">
+<meta property="article:published_time" content="2016-04-01T09:49:30.000Z">
+<meta property="article:modified_time" content="2016-04-01T15:05:09.000Z">
+<meta property="article:author" content="So Naive">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Volley Q&A">
-<meta name="twitter:description" content="1. Volley如何做内存优化的？有两个很有意思的类ByteArrayPool和PoolingByteArrayOutputStream, 当从网络取得响应数据流后，将响应数据转换为字节数组存储到NetworkResponse中。Volley适合数据量小，通信频繁的网络操作，如果按传统方式申请内存则分配内存，然后等待垃圾收集器回收，必然会造成频繁GC, 导致内存抖动，性能下降。">
+
+<link rel="canonical" href="http://sonaive.me/2016/04/01/Volley%20Q&A/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>Volley Q&A | So Naive</title>
   
-    <link rel="alternative" href="/atom.xml" title="So Naive" type="application/atom+xml">
-  
-  
-    <link rel="icon" href="/favicon.png">
-  
-  <link rel="stylesheet" href="/css/style.css">
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="So Naive" type="application/atom+xml">
 </head>
 
-<body>
-  <div id="container">
-    <div class="left-col">
-    <div class="overlay"></div>
-<div class="intrude-less">
-	<header id="header" class="inner">
-		<a href="/" class="profilepic">
-			
-			<img src="/assets/img/avatar.jpg" class="js-avatar" style="width: 100%;height: 100%;opacity: 1;">
-			
-		</a>
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
 
-		<hgroup>
-		  <h1 class="header-author"><a href="/">So Naive</a></h1>
-		</hgroup>
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
 
-		
+  <div class="site-meta">
 
-		
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">So Naive</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
 
-		<div class="switch-area">
-			<div class="switch-wrap">
-				<section class="switch-part switch-part1">
-					<nav class="header-menu">
-						<ul>
-						
-							<li><a href="/">主页</a></li>
-				        
-							<li><a href="/archives">所有文章</a></li>
-				        
-						</ul>
-					</nav>
-					<nav class="header-nav">
-						<div class="social">
-							
-								<a class="github" target="_blank" href="https://github.com/taoliuh" title="github">github</a>
-					        
-								<a class="weibo" target="_blank" href="http://weibo.com/u/3190235471?is_all=1" title="weibo">weibo</a>
-					        
-						</div>
-					</nav>
-				</section>
-				
-				
-				
-				
-
-				
-			</div>
-		</div>
-	</header>				
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
 </div>
 
-    </div>
-    <div class="mid-col">
-      <nav id="mobile-nav">
-  	<div class="overlay">
-  		<div class="slider-trigger"></div>
-  		<h1 class="header-author js-mobile-header hide">So Naive</h1>
-  	</div>
-	<div class="intrude-less">
-		<header id="header" class="inner">
-			<div class="profilepic">
-			
-				<img src="/assets/img/avatar.jpg" class="js-avatar" style="width: 100%;height: 100%;opacity: 1;">
-			
-			</div>
-			<hgroup>
-			  <h1 class="header-author">So Naive</h1>
-			</hgroup>
-			
-			<nav class="header-menu">
-				<ul>
-				
-					<li><a href="/">主页</a></li>
-		        
-					<li><a href="/archives">所有文章</a></li>
-		        
-		        <div class="clearfix"></div>
-				</ul>
-			</nav>
-			<nav class="header-nav">
-				<div class="social">
-					
-						<a class="github" target="_blank" href="https://github.com/taoliuh" title="github">github</a>
-			        
-						<a class="weibo" target="_blank" href="http://weibo.com/u/3190235471?is_all=1" title="weibo">weibo</a>
-			        
-				</div>
-			</nav>
-		</header>				
-	</div>
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
 </nav>
 
-      <div class="body-wrap"><article id="post-Volley Q&amp;A" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2016/04/01/Volley Q&A/" class="article-date">
-  	<time datetime="2016-04-01T09:49:30.000Z" itemprop="datePublished">2016-04-01</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 class="article-title" itemprop="name">
-      Volley Q&amp;A
-    </h1>
-  
 
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://sonaive.me/2016/04/01/Volley%20Q&A/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="So Naive">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="So Naive">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Volley Q&A
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2016-04-01 17:49:30 / Modified: 23:05:09" itemprop="dateCreated datePublished" datetime="2016-04-01T17:49:30+08:00">2016-04-01</time>
+            </span>
+
+          
+
+        </div>
       </header>
-      
-      <div class="article-info article-info-post">
-        
-        
 
-        <div class="clearfix"></div>
-      </div>
-      
     
-    <div class="article-entry" itemprop="articleBody">
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
       
-        <h1 id="1-Volley如何做内存优化的？"><a href="#1-Volley如何做内存优化的？" class="headerlink" title="1. Volley如何做内存优化的？"></a>1. Volley如何做内存优化的？</h1><p>有两个很有意思的类<code>ByteArrayPool</code>和<code>PoolingByteArrayOutputStream</code>, 当从网络取得响应数据流后，将响应数据转换为字节数组存储到<code>NetworkResponse</code>中。Volley适合数据量小，通信频繁的网络操作，如果按传统方式申请内存则分配内存，然后等待垃圾收集器回收，必然会造成频繁GC, 导致内存抖动，性能下降。<br><a id="more"></a></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** com/android/volley/BasicNetwork.java */</span></span><br><span class="line"><span class="comment">/** Reads the contents of HttpEntity into a byte[]. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">byte</span>[] entityToBytes(HttpEntity entity) <span class="keyword">throws</span> IOException, ServerError &#123;</span><br><span class="line">    PoolingByteArrayOutputStream bytes =</span><br><span class="line">            <span class="keyword">new</span> PoolingByteArrayOutputStream(mPool, (<span class="keyword">int</span>) entity.getContentLength());</span><br><span class="line">    <span class="keyword">byte</span>[] buffer = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        InputStream in = entity.getContent();</span><br><span class="line">        <span class="keyword">if</span> (in == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ServerError();</span><br><span class="line">        &#125;</span><br><span class="line">        buffer = mPool.getBuf(<span class="number">1024</span>);</span><br><span class="line">        <span class="keyword">int</span> count;</span><br><span class="line">        <span class="keyword">while</span> ((count = in.read(buffer)) != -<span class="number">1</span>) &#123;</span><br><span class="line">            bytes.write(buffer, <span class="number">0</span>, count);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> bytes.toByteArray();</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// Close the InputStream and release the resources by "consuming the content".</span></span><br><span class="line">            entity.consumeContent();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            <span class="comment">// This can happen if there was an exception above that left the entity in</span></span><br><span class="line">            <span class="comment">// an invalid state.</span></span><br><span class="line">            VolleyLog.v(<span class="string">"Error occured when calling consumingContent"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        mPool.returnBuf(buffer);</span><br><span class="line">        bytes.close();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>一种好的使用场景是，像I/O系统那样使用大块临时的字节数组缓存复制数据。在这种情况下，用户通常希望申请一块尽量小的缓冲区来保证性能，但并不关心缓冲区是否比要读取的数据长度大。上面的代码从池中申请了一块1024字节长度的缓冲区用于输入流中的数据写入到buf中，使用完毕将这部分空间返回给池。同样地，<code>PoolingByteArrayOutputStream</code>用于保存写入字节的缓存是随着写入字节增长而增长的，在调用expand方法的时候会将原来的缓存空间加入到池中。同时定义了缓冲池的最大空间，以空间换性能。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span><br><span class="line"> * com/android/volley/PoolingByteArrayOutputStream.java</span><br><span class="line"> * Ensures there is enough space in the buffer for the given number of additional bytes.</span><br><span class="line"> */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">expand</span><span class="params">(<span class="keyword">int</span> i)</span> </span>&#123;</span><br><span class="line">    <span class="comment">/* Can the buffer handle @i more bytes, if not expand it */</span></span><br><span class="line">    <span class="keyword">if</span> (count + i &lt;= buf.length) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">byte</span>[] newbuf = mPool.getBuf((count + i) * <span class="number">2</span>);</span><br><span class="line">    System.arraycopy(buf, <span class="number">0</span>, newbuf, <span class="number">0</span>, count);</span><br><span class="line">    mPool.returnBuf(buf);</span><br><span class="line">    buf = newbuf;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="2-Volley的缓存机制"><a href="#2-Volley的缓存机制" class="headerlink" title="2.Volley的缓存机制"></a>2.Volley的缓存机制</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span><br><span class="line"> * com/android/volley/RequestQueue.java</span><br><span class="line"> * Staging area for requests that already have a duplicate request in flight.</span><br><span class="line"> *</span><br><span class="line"> * &lt;ul&gt;</span><br><span class="line"> *     &lt;li&gt;containsKey(cacheKey) indicates that there is a request in flight for the given cache</span><br><span class="line"> *          key.&lt;/li&gt;</span><br><span class="line"> *     &lt;li&gt;get(cacheKey) returns waiting requests for the given cache key. The in flight request</span><br><span class="line"> *          is &lt;em&gt;not&lt;/em&gt; contained in that list. Is null if no requests are staged.&lt;/li&gt;</span><br><span class="line"> * &lt;/ul&gt;</span><br><span class="line"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, Queue&lt;Request&lt;?&gt;&gt;&gt; mWaitingRequests =</span><br><span class="line">        <span class="keyword">new</span> HashMap&lt;String, Queue&lt;Request&lt;?&gt;&gt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span><br><span class="line"> * The set of all requests currently being processed by this RequestQueue. A Request</span><br><span class="line"> * will be in this set if it is waiting in any queue or currently being processed by</span><br><span class="line"> * any dispatcher.</span><br><span class="line"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Set&lt;Request&lt;?&gt;&gt; mCurrentRequests = <span class="keyword">new</span> HashSet&lt;Request&lt;?&gt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="comment">/** The cache triage queue. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> PriorityBlockingQueue&lt;Request&lt;?&gt;&gt; mCacheQueue =</span><br><span class="line">    <span class="keyword">new</span> PriorityBlockingQueue&lt;Request&lt;?&gt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="comment">/** The queue of requests that are actually going out to the network. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> PriorityBlockingQueue&lt;Request&lt;?&gt;&gt; mNetworkQueue =</span><br><span class="line">    <span class="keyword">new</span> PriorityBlockingQueue&lt;Request&lt;?&gt;&gt;();</span><br></pre></td></tr></table></figure>
+        <h1 id="1-Volley如何做内存优化的？"><a href="#1-Volley如何做内存优化的？" class="headerlink" title="1. Volley如何做内存优化的？"></a>1. Volley如何做内存优化的？</h1><p>有两个很有意思的类<code>ByteArrayPool</code>和<code>PoolingByteArrayOutputStream</code>, 当从网络取得响应数据流后，将响应数据转换为字节数组存储到<code>NetworkResponse</code>中。Volley适合数据量小，通信频繁的网络操作，如果按传统方式申请内存则分配内存，然后等待垃圾收集器回收，必然会造成频繁GC, 导致内存抖动，性能下降。</p>
+<a id="more"></a>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** com/android/volley/BasicNetwork.java */</span></span><br><span class="line"><span class="comment">/** Reads the contents of HttpEntity into a byte[]. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">byte</span>[] entityToBytes(HttpEntity entity) <span class="keyword">throws</span> IOException, ServerError &#123;</span><br><span class="line">    PoolingByteArrayOutputStream bytes =</span><br><span class="line">            <span class="keyword">new</span> PoolingByteArrayOutputStream(mPool, (<span class="keyword">int</span>) entity.getContentLength());</span><br><span class="line">    <span class="keyword">byte</span>[] buffer = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        InputStream in = entity.getContent();</span><br><span class="line">        <span class="keyword">if</span> (in == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ServerError();</span><br><span class="line">        &#125;</span><br><span class="line">        buffer = mPool.getBuf(<span class="number">1024</span>);</span><br><span class="line">        <span class="keyword">int</span> count;</span><br><span class="line">        <span class="keyword">while</span> ((count = in.read(buffer)) != -<span class="number">1</span>) &#123;</span><br><span class="line">            bytes.write(buffer, <span class="number">0</span>, count);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> bytes.toByteArray();</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// Close the InputStream and release the resources by &quot;consuming the content&quot;.</span></span><br><span class="line">            entity.consumeContent();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            <span class="comment">// This can happen if there was an exception above that left the entity in</span></span><br><span class="line">            <span class="comment">// an invalid state.</span></span><br><span class="line">            VolleyLog.v(<span class="string">&quot;Error occured when calling consumingContent&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        mPool.returnBuf(buffer);</span><br><span class="line">        bytes.close();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>一种好的使用场景是，像I/O系统那样使用大块临时的字节数组缓存复制数据。在这种情况下，用户通常希望申请一块尽量小的缓冲区来保证性能，但并不关心缓冲区是否比要读取的数据长度大。上面的代码从池中申请了一块1024字节长度的缓冲区用于输入流中的数据写入到buf中，使用完毕将这部分空间返回给池。同样地，<code>PoolingByteArrayOutputStream</code>用于保存写入字节的缓存是随着写入字节增长而增长的，在调用expand方法的时候会将原来的缓存空间加入到池中。同时定义了缓冲池的最大空间，以空间换性能。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * com/android/volley/PoolingByteArrayOutputStream.java</span></span><br><span class="line"><span class="comment"> * Ensures there is enough space in the buffer for the given number of additional bytes.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">expand</span><span class="params">(<span class="keyword">int</span> i)</span> </span>&#123;</span><br><span class="line">    <span class="comment">/* Can the buffer handle @i more bytes, if not expand it */</span></span><br><span class="line">    <span class="keyword">if</span> (count + i &lt;= buf.length) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">byte</span>[] newbuf = mPool.getBuf((count + i) * <span class="number">2</span>);</span><br><span class="line">    System.arraycopy(buf, <span class="number">0</span>, newbuf, <span class="number">0</span>, count);</span><br><span class="line">    mPool.returnBuf(buf);</span><br><span class="line">    buf = newbuf;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="2-Volley的缓存机制"><a href="#2-Volley的缓存机制" class="headerlink" title="2.Volley的缓存机制"></a>2.Volley的缓存机制</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * com/android/volley/RequestQueue.java</span></span><br><span class="line"><span class="comment"> * Staging area for requests that already have a duplicate request in flight.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * &lt;ul&gt;</span></span><br><span class="line"><span class="comment"> *     &lt;li&gt;containsKey(cacheKey) indicates that there is a request in flight for the given cache</span></span><br><span class="line"><span class="comment"> *          key.&lt;/li&gt;</span></span><br><span class="line"><span class="comment"> *     &lt;li&gt;get(cacheKey) returns waiting requests for the given cache key. The in flight request</span></span><br><span class="line"><span class="comment"> *          is &lt;em&gt;not&lt;/em&gt; contained in that list. Is null if no requests are staged.&lt;/li&gt;</span></span><br><span class="line"><span class="comment"> * &lt;/ul&gt;</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, Queue&lt;Request&lt;?&gt;&gt;&gt; mWaitingRequests =</span><br><span class="line">        <span class="keyword">new</span> HashMap&lt;String, Queue&lt;Request&lt;?&gt;&gt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * The set of all requests currently being processed by this RequestQueue. A Request</span></span><br><span class="line"><span class="comment"> * will be in this set if it is waiting in any queue or currently being processed by</span></span><br><span class="line"><span class="comment"> * any dispatcher.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Set&lt;Request&lt;?&gt;&gt; mCurrentRequests = <span class="keyword">new</span> HashSet&lt;Request&lt;?&gt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="comment">/** The cache triage queue. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> PriorityBlockingQueue&lt;Request&lt;?&gt;&gt; mCacheQueue =</span><br><span class="line">    <span class="keyword">new</span> PriorityBlockingQueue&lt;Request&lt;?&gt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="comment">/** The queue of requests that are actually going out to the network. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> PriorityBlockingQueue&lt;Request&lt;?&gt;&gt; mNetworkQueue =</span><br><span class="line">    <span class="keyword">new</span> PriorityBlockingQueue&lt;Request&lt;?&gt;&gt;();</span><br></pre></td></tr></table></figure>
 <p>创建一个<code>RequestQueue</code>的时候会创建一个缓存请求队列，一个网络请求队列，一个等待任务集合和一个当前正在处理的请求的集合。创建5个工作线程，其中一个是<code>CacheDispather</code>, 处理缓存队列中任务，4个是<code>NetworkDispatcher</code>, 处理网络请求队列中的任务。如果一个请求任务需要缓存，就把它加入到缓存请求队列，如果等待任务集合中已经有这个请求，就把它加入到这个集合中相同的等待队列中。当一个任务完成时，检查等待队列中是否有相同的请求，把这些请求加入缓存队列中。这样做的目的是对于连续的相同的请求，提高缓存命中率。加入到缓存队列中的请求，在<code>CacheDispather</code>线程处理时如果没有命中缓存，就将这个任务加入到网络请求队列中去处理。如果命中了缓存，但是缓存过期，就将这个任务加入到网络请求队列中。如果Soft Expire过期，表示快到过期时间了，那么先返回缓存，然后更新缓存内容。</p>
 <h2 id="3-如何判断缓存是否过期？"><a href="#3-如何判断缓存是否过期？" class="headerlink" title="3.如何判断缓存是否过期？"></a>3.如何判断缓存是否过期？</h2><h3 id="Cache-Control指令"><a href="#Cache-Control指令" class="headerlink" title="Cache-Control指令"></a>Cache-Control指令</h3><table>
 <thead>
@@ -165,8 +205,7 @@
 <th>说明</th>
 </tr>
 </thead>
-<tbody>
-<tr>
+<tbody><tr>
 <td>no_cache</td>
 <td>可省略</td>
 <td>缓存前必须先确认有效性</td>
@@ -196,129 +235,202 @@
 <td>无</td>
 <td>要求中间缓存服务器对缓存的响应有效性再进行确认</td>
 </tr>
-</tbody>
-</table>
+</tbody></table>
 <p>解析响应首部，通过指定首部字段Cache-Control, 就能操作缓存的工作机制，指令可选，通过多个”,”分隔，如果指令是no_cache或no_store, 那么不缓存；如果指令是max_age, 记录缓存最大age值，还有stale_while_revalidate, 允许先返回缓存，然后重新请求刷新，隐藏了延迟。此外must_revalidate, proxy_revalidate, 必须向源服务器进行确认。首部Expire获取过期时间，首部Last_Modified获取资源修改时间。优先使用Cache-Control来计算缓存的过期时间。如果一个请求命中了缓存，重新加入到请求队列中的请求就会加上原来请求的一些首部信息。If-None-Match用于指定字段值的实体标记ETag与请求资源的ETag不一致时，告诉服务器处理该请求。If-Modified-Since则会告诉服务器若该字段值早于资源的更新时间，就处理该请求，如果请求的资源没有更新过，返回304 Not Modified的响应。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span><br><span class="line"> * com/android/volley/toolbox/HttpHeaderParser.java</span><br><span class="line"> * Extracts a &#123;<span class="doctag">@link</span> Cache.Entry&#125; from a &#123;<span class="doctag">@link</span> NetworkResponse&#125;.</span><br><span class="line"> *</span><br><span class="line"> * <span class="doctag">@param</span> response The network response to parse headers from</span><br><span class="line"> * <span class="doctag">@return</span> a cache entry for the given response, or null if the response is not cacheable.</span><br><span class="line"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Cache.<span class="function">Entry <span class="title">parseCacheHeaders</span><span class="params">(NetworkResponse response)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">long</span> now = System.currentTimeMillis();</span><br><span class="line"></span><br><span class="line">    Map&lt;String, String&gt; headers = response.headers;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">long</span> serverDate = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">long</span> lastModified = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">long</span> serverExpires = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">long</span> softExpire = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">long</span> finalExpire = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">long</span> maxAge = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">long</span> staleWhileRevalidate = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">boolean</span> hasCacheControl = <span class="keyword">false</span>;</span><br><span class="line">    <span class="keyword">boolean</span> mustRevalidate = <span class="keyword">false</span>;</span><br><span class="line"></span><br><span class="line">    String serverEtag = <span class="keyword">null</span>;</span><br><span class="line">    String headerValue;</span><br><span class="line"></span><br><span class="line">    headerValue = headers.get(<span class="string">"Date"</span>);</span><br><span class="line">    <span class="keyword">if</span> (headerValue != <span class="keyword">null</span>) &#123;</span><br><span class="line">        serverDate = parseDateAsEpoch(headerValue);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    headerValue = headers.get(<span class="string">"Cache-Control"</span>);</span><br><span class="line">    <span class="keyword">if</span> (headerValue != <span class="keyword">null</span>) &#123;</span><br><span class="line">        hasCacheControl = <span class="keyword">true</span>;</span><br><span class="line">        String[] tokens = headerValue.split(<span class="string">","</span>);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; tokens.length; i++) &#123;</span><br><span class="line">            String token = tokens[i].trim();</span><br><span class="line">            <span class="keyword">if</span> (token.equals(<span class="string">"no-cache"</span>) || token.equals(<span class="string">"no-store"</span>)) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (token.startsWith(<span class="string">"max-age="</span>)) &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    maxAge = Long.parseLong(token.substring(<span class="number">8</span>));</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (token.startsWith(<span class="string">"stale-while-revalidate="</span>)) &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    staleWhileRevalidate = Long.parseLong(token.substring(<span class="number">23</span>));</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (token.equals(<span class="string">"must-revalidate"</span>) || token.equals(<span class="string">"proxy-revalidate"</span>)) &#123;</span><br><span class="line">                mustRevalidate = <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    headerValue = headers.get(<span class="string">"Expires"</span>);</span><br><span class="line">    <span class="keyword">if</span> (headerValue != <span class="keyword">null</span>) &#123;</span><br><span class="line">        serverExpires = parseDateAsEpoch(headerValue);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    headerValue = headers.get(<span class="string">"Last-Modified"</span>);</span><br><span class="line">    <span class="keyword">if</span> (headerValue != <span class="keyword">null</span>) &#123;</span><br><span class="line">        lastModified = parseDateAsEpoch(headerValue);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    serverEtag = headers.get(<span class="string">"ETag"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Cache-Control takes precedence over an Expires header, even if both exist and Expires</span></span><br><span class="line">    <span class="comment">// is more restrictive.</span></span><br><span class="line">    <span class="keyword">if</span> (hasCacheControl) &#123;</span><br><span class="line">        softExpire = now + maxAge * <span class="number">1000</span>;</span><br><span class="line">        finalExpire = mustRevalidate</span><br><span class="line">                ? softExpire</span><br><span class="line">                : softExpire + staleWhileRevalidate * <span class="number">1000</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (serverDate &gt; <span class="number">0</span> &amp;&amp; serverExpires &gt;= serverDate) &#123;</span><br><span class="line">        <span class="comment">// Default semantic for Expire header in HTTP specification is softExpire.</span></span><br><span class="line">        softExpire = now + (serverExpires - serverDate);</span><br><span class="line">        finalExpire = softExpire;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Cache.Entry entry = <span class="keyword">new</span> Cache.Entry();</span><br><span class="line">    entry.data = response.data;</span><br><span class="line">    entry.etag = serverEtag;</span><br><span class="line">    entry.softTtl = softExpire;</span><br><span class="line">    entry.ttl = finalExpire;</span><br><span class="line">    entry.serverDate = serverDate;</span><br><span class="line">    entry.lastModified = lastModified;</span><br><span class="line">    entry.responseHeaders = headers;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> entry;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>判断缓存是否需要更新，就是根据首部字段的信息判断的。相关方法是<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** TTL for this record. */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">long</span> ttl;</span><br><span class="line"></span><br><span class="line"><span class="comment">/** Soft TTL for this record. */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">long</span> softTtl;</span><br><span class="line"></span><br><span class="line"><span class="comment">/** Immutable response headers as received from server; must be non-null. */</span></span><br><span class="line"><span class="keyword">public</span> Map&lt;String, String&gt; responseHeaders = Collections.emptyMap();</span><br><span class="line"></span><br><span class="line"><span class="comment">/** True if the entry is expired. */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isExpired</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.ttl &lt; System.currentTimeMillis();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/** True if a refresh is needed from the original data source. */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">refreshNeeded</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.softTtl &lt; System.currentTimeMillis();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="4-请求失败如何进行重试？响应状态码非200如何处理"><a href="#4-请求失败如何进行重试？响应状态码非200如何处理" class="headerlink" title="4.请求失败如何进行重试？响应状态码非200如何处理"></a>4.请求失败如何进行重试？响应状态码非200如何处理</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> NetworkResponse <span class="title">performRequest</span><span class="params">(Request&lt;?&gt; request)</span> <span class="keyword">throws</span> VolleyError </span>&#123;</span><br><span class="line">    <span class="keyword">long</span> requestStart = SystemClock.elapsedRealtime();</span><br><span class="line">    <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            ...</span><br><span class="line">            responseHeaders = convertHeaders(httpResponse.getAllHeaders());</span><br><span class="line">            <span class="comment">// Handle cache validation.</span></span><br><span class="line">            <span class="keyword">if</span> (statusCode == HttpStatus.SC_NOT_MODIFIED) &#123;</span><br><span class="line"></span><br><span class="line">                Entry entry = request.getCacheEntry();</span><br><span class="line">                <span class="keyword">if</span> (entry == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">new</span> NetworkResponse(HttpStatus.SC_NOT_MODIFIED, <span class="keyword">null</span>,</span><br><span class="line">                            responseHeaders, <span class="keyword">true</span>,</span><br><span class="line">                            SystemClock.elapsedRealtime() - requestStart);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// A HTTP 304 response does not have all header fields. We</span></span><br><span class="line">                <span class="comment">// have to use the header fields from the cache entry plus</span></span><br><span class="line">                <span class="comment">// the new ones from the response.</span></span><br><span class="line">                <span class="comment">// http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.3.5</span></span><br><span class="line">                entry.responseHeaders.putAll(responseHeaders);</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">new</span> NetworkResponse(HttpStatus.SC_NOT_MODIFIED, entry.data,</span><br><span class="line">                        entry.responseHeaders, <span class="keyword">true</span>,</span><br><span class="line">                        SystemClock.elapsedRealtime() - requestStart);</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            <span class="comment">// Handle moved resources</span></span><br><span class="line">            <span class="keyword">if</span> (statusCode == HttpStatus.SC_MOVED_PERMANENTLY || statusCode == HttpStatus.SC_MOVED_TEMPORARILY) &#123;</span><br><span class="line">            	String newUrl = responseHeaders.get(<span class="string">"Location"</span>);</span><br><span class="line">            	request.setRedirectUrl(newUrl);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Some responses such as 204s do not have content.  We must check.</span></span><br><span class="line">            <span class="keyword">if</span> (httpResponse.getEntity() != <span class="keyword">null</span>) &#123;</span><br><span class="line">              responseContents = entityToBytes(httpResponse.getEntity());</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">              <span class="comment">// Add 0 byte response as a way of honestly representing a</span></span><br><span class="line">              <span class="comment">// no-content request.</span></span><br><span class="line">              responseContents = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">0</span>];</span><br><span class="line">            &#125;</span><br><span class="line">            ...</span><br><span class="line">            <span class="keyword">if</span> (statusCode &lt; <span class="number">200</span> || statusCode &gt; <span class="number">299</span>) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> IOException();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> NetworkResponse(statusCode, responseContents, responseHeaders, <span class="keyword">false</span>,</span><br><span class="line">                    SystemClock.elapsedRealtime() - requestStart);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (SocketTimeoutException e) &#123;</span><br><span class="line">            attemptRetryOnException(<span class="string">"socket"</span>, request, <span class="keyword">new</span> TimeoutError());</span><br><span class="line">        &#125; <span class="keyword">catch</span> (ConnectTimeoutException e) &#123;</span><br><span class="line">            attemptRetryOnException(<span class="string">"connection"</span>, request, <span class="keyword">new</span> TimeoutError());</span><br><span class="line">        &#125; <span class="keyword">catch</span> (MalformedURLException e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"Bad URL "</span> + request.getUrl(), e);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * com/android/volley/toolbox/HttpHeaderParser.java</span></span><br><span class="line"><span class="comment"> * Extracts a &#123;<span class="doctag">@link</span> Cache.Entry&#125; from a &#123;<span class="doctag">@link</span> NetworkResponse&#125;.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> response The network response to parse headers from</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> a cache entry for the given response, or null if the response is not cacheable.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Cache.<span class="function">Entry <span class="title">parseCacheHeaders</span><span class="params">(NetworkResponse response)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">long</span> now = System.currentTimeMillis();</span><br><span class="line"></span><br><span class="line">    Map&lt;String, String&gt; headers = response.headers;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">long</span> serverDate = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">long</span> lastModified = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">long</span> serverExpires = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">long</span> softExpire = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">long</span> finalExpire = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">long</span> maxAge = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">long</span> staleWhileRevalidate = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">boolean</span> hasCacheControl = <span class="keyword">false</span>;</span><br><span class="line">    <span class="keyword">boolean</span> mustRevalidate = <span class="keyword">false</span>;</span><br><span class="line"></span><br><span class="line">    String serverEtag = <span class="keyword">null</span>;</span><br><span class="line">    String headerValue;</span><br><span class="line"></span><br><span class="line">    headerValue = headers.get(<span class="string">&quot;Date&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (headerValue != <span class="keyword">null</span>) &#123;</span><br><span class="line">        serverDate = parseDateAsEpoch(headerValue);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    headerValue = headers.get(<span class="string">&quot;Cache-Control&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (headerValue != <span class="keyword">null</span>) &#123;</span><br><span class="line">        hasCacheControl = <span class="keyword">true</span>;</span><br><span class="line">        String[] tokens = headerValue.split(<span class="string">&quot;,&quot;</span>);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; tokens.length; i++) &#123;</span><br><span class="line">            String token = tokens[i].trim();</span><br><span class="line">            <span class="keyword">if</span> (token.equals(<span class="string">&quot;no-cache&quot;</span>) || token.equals(<span class="string">&quot;no-store&quot;</span>)) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (token.startsWith(<span class="string">&quot;max-age=&quot;</span>)) &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    maxAge = Long.parseLong(token.substring(<span class="number">8</span>));</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (token.startsWith(<span class="string">&quot;stale-while-revalidate=&quot;</span>)) &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    staleWhileRevalidate = Long.parseLong(token.substring(<span class="number">23</span>));</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (token.equals(<span class="string">&quot;must-revalidate&quot;</span>) || token.equals(<span class="string">&quot;proxy-revalidate&quot;</span>)) &#123;</span><br><span class="line">                mustRevalidate = <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    headerValue = headers.get(<span class="string">&quot;Expires&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (headerValue != <span class="keyword">null</span>) &#123;</span><br><span class="line">        serverExpires = parseDateAsEpoch(headerValue);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    headerValue = headers.get(<span class="string">&quot;Last-Modified&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (headerValue != <span class="keyword">null</span>) &#123;</span><br><span class="line">        lastModified = parseDateAsEpoch(headerValue);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    serverEtag = headers.get(<span class="string">&quot;ETag&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Cache-Control takes precedence over an Expires header, even if both exist and Expires</span></span><br><span class="line">    <span class="comment">// is more restrictive.</span></span><br><span class="line">    <span class="keyword">if</span> (hasCacheControl) &#123;</span><br><span class="line">        softExpire = now + maxAge * <span class="number">1000</span>;</span><br><span class="line">        finalExpire = mustRevalidate</span><br><span class="line">                ? softExpire</span><br><span class="line">                : softExpire + staleWhileRevalidate * <span class="number">1000</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (serverDate &gt; <span class="number">0</span> &amp;&amp; serverExpires &gt;= serverDate) &#123;</span><br><span class="line">        <span class="comment">// Default semantic for Expire header in HTTP specification is softExpire.</span></span><br><span class="line">        softExpire = now + (serverExpires - serverDate);</span><br><span class="line">        finalExpire = softExpire;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Cache.Entry entry = <span class="keyword">new</span> Cache.Entry();</span><br><span class="line">    entry.data = response.data;</span><br><span class="line">    entry.etag = serverEtag;</span><br><span class="line">    entry.softTtl = softExpire;</span><br><span class="line">    entry.ttl = finalExpire;</span><br><span class="line">    entry.serverDate = serverDate;</span><br><span class="line">    entry.lastModified = lastModified;</span><br><span class="line">    entry.responseHeaders = headers;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> entry;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>判断缓存是否需要更新，就是根据首部字段的信息判断的。相关方法是</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** TTL for this record. */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">long</span> ttl;</span><br><span class="line"></span><br><span class="line"><span class="comment">/** Soft TTL for this record. */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">long</span> softTtl;</span><br><span class="line"></span><br><span class="line"><span class="comment">/** Immutable response headers as received from server; must be non-null. */</span></span><br><span class="line"><span class="keyword">public</span> Map&lt;String, String&gt; responseHeaders = Collections.emptyMap();</span><br><span class="line"></span><br><span class="line"><span class="comment">/** True if the entry is expired. */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isExpired</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.ttl &lt; System.currentTimeMillis();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/** True if a refresh is needed from the original data source. */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">refreshNeeded</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.softTtl &lt; System.currentTimeMillis();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="4-请求失败如何进行重试？响应状态码非200如何处理"><a href="#4-请求失败如何进行重试？响应状态码非200如何处理" class="headerlink" title="4.请求失败如何进行重试？响应状态码非200如何处理"></a>4.请求失败如何进行重试？响应状态码非200如何处理</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> NetworkResponse <span class="title">performRequest</span><span class="params">(Request&lt;?&gt; request)</span> <span class="keyword">throws</span> VolleyError </span>&#123;</span><br><span class="line">    <span class="keyword">long</span> requestStart = SystemClock.elapsedRealtime();</span><br><span class="line">    <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            ...</span><br><span class="line">            responseHeaders = convertHeaders(httpResponse.getAllHeaders());</span><br><span class="line">            <span class="comment">// Handle cache validation.</span></span><br><span class="line">            <span class="keyword">if</span> (statusCode == HttpStatus.SC_NOT_MODIFIED) &#123;</span><br><span class="line"></span><br><span class="line">                Entry entry = request.getCacheEntry();</span><br><span class="line">                <span class="keyword">if</span> (entry == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">new</span> NetworkResponse(HttpStatus.SC_NOT_MODIFIED, <span class="keyword">null</span>,</span><br><span class="line">                            responseHeaders, <span class="keyword">true</span>,</span><br><span class="line">                            SystemClock.elapsedRealtime() - requestStart);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// A HTTP 304 response does not have all header fields. We</span></span><br><span class="line">                <span class="comment">// have to use the header fields from the cache entry plus</span></span><br><span class="line">                <span class="comment">// the new ones from the response.</span></span><br><span class="line">                <span class="comment">// http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.3.5</span></span><br><span class="line">                entry.responseHeaders.putAll(responseHeaders);</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">new</span> NetworkResponse(HttpStatus.SC_NOT_MODIFIED, entry.data,</span><br><span class="line">                        entry.responseHeaders, <span class="keyword">true</span>,</span><br><span class="line">                        SystemClock.elapsedRealtime() - requestStart);</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            <span class="comment">// Handle moved resources</span></span><br><span class="line">            <span class="keyword">if</span> (statusCode == HttpStatus.SC_MOVED_PERMANENTLY || statusCode == HttpStatus.SC_MOVED_TEMPORARILY) &#123;</span><br><span class="line">            	String newUrl = responseHeaders.get(<span class="string">&quot;Location&quot;</span>);</span><br><span class="line">            	request.setRedirectUrl(newUrl);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Some responses such as 204s do not have content.  We must check.</span></span><br><span class="line">            <span class="keyword">if</span> (httpResponse.getEntity() != <span class="keyword">null</span>) &#123;</span><br><span class="line">              responseContents = entityToBytes(httpResponse.getEntity());</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">              <span class="comment">// Add 0 byte response as a way of honestly representing a</span></span><br><span class="line">              <span class="comment">// no-content request.</span></span><br><span class="line">              responseContents = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">0</span>];</span><br><span class="line">            &#125;</span><br><span class="line">            ...</span><br><span class="line">            <span class="keyword">if</span> (statusCode &lt; <span class="number">200</span> || statusCode &gt; <span class="number">299</span>) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> IOException();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> NetworkResponse(statusCode, responseContents, responseHeaders, <span class="keyword">false</span>,</span><br><span class="line">                    SystemClock.elapsedRealtime() - requestStart);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (SocketTimeoutException e) &#123;</span><br><span class="line">            attemptRetryOnException(<span class="string">&quot;socket&quot;</span>, request, <span class="keyword">new</span> TimeoutError());</span><br><span class="line">        &#125; <span class="keyword">catch</span> (ConnectTimeoutException e) &#123;</span><br><span class="line">            attemptRetryOnException(<span class="string">&quot;connection&quot;</span>, request, <span class="keyword">new</span> TimeoutError());</span><br><span class="line">        &#125; <span class="keyword">catch</span> (MalformedURLException e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">&quot;Bad URL &quot;</span> + request.getUrl(), e);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>响应超时、连接超时、I/O异常、认证错误、资源重定向都需要重试，注意到performRequet方法是一个无限循环，用完重试次数仍然失败则抛出VolleyError, 结束循环。注意到针对几种状态码进行了特别处理：<br>1）304 Not Modified 表示客户端发送附带条件的请求时，服务器端允许访问资源，但因发送请求未满足条件，直接返回304（服务器端资源未改变，可直接使用客户端未过期的缓存）。<br>2）301 Moved Permanently, 302 Not Found 永久重定向和临时重定向，表示请求的资源以及分配了新的URI, 通过首部字段Location获取新的资源地址。通过设定请求的跳转地址redirectUrl, 下次重试时直接使用新地址访问资源。<br>3）204 No Content 表示服务端接受的请求已经重新处理，但返回的响应报文中不含实体的主体部分。在这种情况下返回空内容，客户端不做处理。<br>4）小于200和大于299的状态码均抛出异常。</p>
 
-      
     </div>
+
     
-  </div>
-  
     
-<nav id="article-nav">
-  
-    <a href="/2016/05/04/disk-lru-cache-analysis/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption"><</strong>
-      <div class="article-nav-title">
+    
+
+      <footer class="post-footer">
+
         
-          DiskLruCache源码分析
+
+
         
-      </div>
-    </a>
-  
-  
-    <a href="/2016/03/30/image-loader-in-cube-sdk_1/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">浅析Cube SDK里的ImageLoader组件是如何加载图片的（一）</div>
-      <strong class="article-nav-caption">></strong>
-    </a>
-  
-</nav>
-
-  
-</article>
-
-
-
-
-
-
-<div class="duoshuo">
-	<!-- 多说评论框 start -->
-	<div class="ds-thread" data-thread-key="Volley Q&amp;A" data-title="Volley Q&amp;A" data-url="http://sonaive.me/2016/04/01/Volley Q&amp;A/"></div>
-	<!-- 多说评论框 end -->
-	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
-	<script type="text/javascript">
-	var duoshuoQuery = {short_name:"true"};
-	(function() {
-		var ds = document.createElement('script');
-		ds.type = 'text/javascript';ds.async = true;
-		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
-		ds.charset = 'UTF-8';
-		(document.getElementsByTagName('head')[0] 
-		 || document.getElementsByTagName('body')[0]).appendChild(ds);
-	})();
-	</script>
-	<!-- 多说公共JS代码 end -->
-</div>
-
-
-
-
-</div>
-      <footer id="footer">
-  <div class="outer">
-    <div id="footer-info">
-    	<div class="footer-left">
-    		&copy; 2018 So Naive
-    	</div>
-      	<div class="footer-right">
-      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
-      	</div>
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2016/03/30/image-loader-in-cube-sdk_1/" rel="prev" title="浅析Cube SDK里的ImageLoader组件是如何加载图片的（一）">
+      <i class="fa fa-chevron-left"></i> 浅析Cube SDK里的ImageLoader组件是如何加载图片的（一）
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2016/05/04/disk-lru-cache-analysis/" rel="next" title="DiskLruCache源码分析">
+      DiskLruCache源码分析 <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
-  </div>
-</footer>
-    </div>
+      </footer>
     
-  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  </article>
+  
+  
+  
 
+
+
+          </div>
+          
 
 <script>
-	var yiliaConfig = {
-		fancybox: true,
-		mathjax: true,
-		animate: false,
-		isHome: false,
-		isPost: true,
-		isArchive: false,
-		isTag: false,
-		isCategory: false,
-		open_in_new: false
-	}
-</script>
-<script src="http://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
-<script src="/js/main.js"></script>
-
-
-
-
-
-
-<script type="text/x-mathjax-config">
-MathJax.Hub.Config({
-    tex2jax: {
-        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
-        processEscapes: true,
-        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
     }
-});
-
-MathJax.Hub.Queue(function() {
-    var all = MathJax.Hub.getAllJax(), i;
-    for(i=0; i < all.length; i += 1) {
-        all[i].SourceElement().parentNode.className += ' has-jax';                 
-    }       
-});
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
 </script>
 
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-</script>
-
-
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
   </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-Volley%E5%A6%82%E4%BD%95%E5%81%9A%E5%86%85%E5%AD%98%E4%BC%98%E5%8C%96%E7%9A%84%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">1. Volley如何做内存优化的？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-Volley%E7%9A%84%E7%BC%93%E5%AD%98%E6%9C%BA%E5%88%B6"><span class="nav-number">1.1.</span> <span class="nav-text">2.Volley的缓存机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%AD%E7%BC%93%E5%AD%98%E6%98%AF%E5%90%A6%E8%BF%87%E6%9C%9F%EF%BC%9F"><span class="nav-number">1.2.</span> <span class="nav-text">3.如何判断缓存是否过期？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Cache-Control%E6%8C%87%E4%BB%A4"><span class="nav-number">1.2.1.</span> <span class="nav-text">Cache-Control指令</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E8%AF%B7%E6%B1%82%E5%A4%B1%E8%B4%A5%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8C%E9%87%8D%E8%AF%95%EF%BC%9F%E5%93%8D%E5%BA%94%E7%8A%B6%E6%80%81%E7%A0%81%E9%9D%9E200%E5%A6%82%E4%BD%95%E5%A4%84%E7%90%86"><span class="nav-number">1.3.</span> <span class="nav-text">4.请求失败如何进行重试？响应状态码非200如何处理</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">So Naive</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/taoliuh" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;taoliuh" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:taoliuh@gmail.com" title="E-Mail → mailto:taoliuh@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">So Naive</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
 </body>
 </html>
