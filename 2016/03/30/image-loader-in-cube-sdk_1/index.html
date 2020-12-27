@@ -1,25 +1,11 @@
 <!DOCTYPE html>
-<html lang="">
+<html>
 <head>
-  <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
-<meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 5.3.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
-  <link rel="mask-icon" href="/images/logo.svg" color="#222">
-
-<link rel="stylesheet" href="/css/main.css">
-
-
-<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
-
-<script id="hexo-configurations">
-    var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"sonaive.me","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
-  </script>
-
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" >
+  <title>浅析Cube SDK里的ImageLoader组件是如何加载图片的（一） | So Naive</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="为什么使用轻量级的库？通常我会选择一些成熟的、功能丰富的框架，而这些框架通常是一些重量级的库，也许很多功能你根本用不到，而这些需求之外的功能直接导致了代码体积的增长。也许使用Proguard能移除没有使用的代码，但是类之间如果存在复杂的依赖耦合关系，Proguard还能起到多大作用，Who knows. 有人担心以后可能需要用到那些功能，现在的库没法满足需求. OK, 在使用这个库的时候了解是如何">
 <meta property="og:type" content="article">
 <meta property="og:title" content="浅析Cube SDK里的ImageLoader组件是如何加载图片的（一）">
@@ -31,169 +17,143 @@
 <meta property="article:modified_time" content="2016-04-01T09:32:11.000Z">
 <meta property="article:author" content="So Naive">
 <meta name="twitter:card" content="summary">
-
-<link rel="canonical" href="http://sonaive.me/2016/03/30/image-loader-in-cube-sdk_1/">
-
-
-<script id="page-configurations">
-  // https://hexo.io/docs/variables.html
-  CONFIG.page = {
-    sidebar: "",
-    isHome : false,
-    isPost : true,
-    lang   : 'default'
-  };
-</script>
-
-  <title>浅析Cube SDK里的ImageLoader组件是如何加载图片的（一） | So Naive</title>
   
+    <link rel="alternative" href="/atom.xml" title="So Naive" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
 
+<meta name="generator" content="Hexo 5.3.0"></head>
 
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+	<header id="header" class="inner">
+		<a href="/" class="profilepic">
+			
+			<img src="/assets/img/avatar.jpg" class="js-avatar" style="width: 100%;height: 100%;opacity: 1;">
+			
+		</a>
 
+		<hgroup>
+		  <h1 class="header-author"><a href="/"></a></h1>
+		</hgroup>
 
+		
 
+		
 
-  <noscript>
-  <style>
-  .use-motion .brand,
-  .use-motion .menu-item,
-  .sidebar-inner,
-  .use-motion .post-block,
-  .use-motion .pagination,
-  .use-motion .comments,
-  .use-motion .post-header,
-  .use-motion .post-body,
-  .use-motion .collection-header { opacity: initial; }
+		<div class="switch-area">
+			<div class="switch-wrap">
+				<section class="switch-part switch-part1">
+					<nav class="header-menu">
+						<ul>
+						
+							<li><a href="/">主页</a></li>
+				        
+							<li><a href="/archives">所有文章</a></li>
+				        
+						</ul>
+					</nav>
+					<nav class="header-nav">
+						<div class="social">
+							
+								<a class="github" target="_blank" href="https://github.com/taoliuh" title="github">github</a>
+					        
+								<a class="weibo" target="_blank" href="http://weibo.com/u/3190235471?is_all=1" title="weibo">weibo</a>
+					        
+						</div>
+					</nav>
+				</section>
+				
+				
+				
+				
 
-  .use-motion .site-title,
-  .use-motion .site-subtitle {
-    opacity: initial;
-    top: initial;
-  }
-
-  .use-motion .logo-line-before i { left: initial; }
-  .use-motion .logo-line-after i { right: initial; }
-  </style>
-</noscript>
-
-<link rel="alternate" href="/atom.xml" title="So Naive" type="application/atom+xml">
-</head>
-
-<body itemscope itemtype="http://schema.org/WebPage">
-  <div class="container use-motion">
-    <div class="headband"></div>
-
-    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-container">
-  <div class="site-nav-toggle">
-    <div class="toggle" aria-label="Toggle navigation bar">
-      <span class="toggle-line toggle-line-first"></span>
-      <span class="toggle-line toggle-line-middle"></span>
-      <span class="toggle-line toggle-line-last"></span>
-    </div>
-  </div>
-
-  <div class="site-meta">
-
-    <a href="/" class="brand" rel="start">
-      <span class="logo-line-before"><i></i></span>
-      <h1 class="site-title">So Naive</h1>
-      <span class="logo-line-after"><i></i></span>
-    </a>
-  </div>
-
-  <div class="site-nav-right">
-    <div class="toggle popup-trigger">
-    </div>
-  </div>
+				
+			</div>
+		</div>
+	</header>				
 </div>
 
-
-
-
-<nav class="site-nav">
-  <ul id="menu" class="menu">
-        <li class="menu-item menu-item-home">
-
-    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
-
-  </li>
-        <li class="menu-item menu-item-archives">
-
-    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
-
-  </li>
-  </ul>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+  	<div class="overlay">
+  		<div class="slider-trigger"></div>
+  		<h1 class="header-author js-mobile-header hide"></h1>
+  	</div>
+	<div class="intrude-less">
+		<header id="header" class="inner">
+			<div class="profilepic">
+			
+				<img src="/assets/img/avatar.jpg" class="js-avatar" style="width: 100%;height: 100%;opacity: 1;">
+			
+			</div>
+			<hgroup>
+			  <h1 class="header-author"></h1>
+			</hgroup>
+			
+			<nav class="header-menu">
+				<ul>
+				
+					<li><a href="/">主页</a></li>
+		        
+					<li><a href="/archives">所有文章</a></li>
+		        
+		        <div class="clearfix"></div>
+				</ul>
+			</nav>
+			<nav class="header-nav">
+				<div class="social">
+					
+						<a class="github" target="_blank" href="https://github.com/taoliuh" title="github">github</a>
+			        
+						<a class="weibo" target="_blank" href="http://weibo.com/u/3190235471?is_all=1" title="weibo">weibo</a>
+			        
+				</div>
+			</nav>
+		</header>				
+	</div>
 </nav>
 
-
-
-
-</div>
-    </header>
-
-    
-  <div class="back-to-top">
-    <i class="fa fa-arrow-up"></i>
-    <span>0%</span>
-  </div>
-
-
-    <main class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          
-
-          <div class="content post posts-expand">
-            
-
-    
+      <div class="body-wrap"><article id="post-image-loader-in-cube-sdk_1" class="article article-type-post" itemscope itemprop="blogPost">
   
+    <div class="article-meta">
+      <a href="/2016/03/30/image-loader-in-cube-sdk_1/" class="article-date">
+  	<time datetime="2016-03-30T15:35:11.000Z" itemprop="datePublished">2016-03-30</time>
+</a>
+    </div>
   
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
-    <link itemprop="mainEntityOfPage" href="http://sonaive.me/2016/03/30/image-loader-in-cube-sdk_1/">
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      浅析Cube SDK里的ImageLoader组件是如何加载图片的（一）
+    </h1>
+  
 
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="So Naive">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="So Naive">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          浅析Cube SDK里的ImageLoader组件是如何加载图片的（一）
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2016-03-30 23:35:11" itemprop="dateCreated datePublished" datetime="2016-03-30T23:35:11+08:00">2016-03-30</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2016-04-01 17:32:11" itemprop="dateModified" datetime="2016-04-01T17:32:11+08:00">2016-04-01</time>
-              </span>
-
-          
-
-        </div>
       </header>
+      
+      <div class="article-info article-info-post">
+        
+        
 
+        <div class="clearfix"></div>
+      </div>
+      
     
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
+    <div class="article-entry" itemprop="articleBody">
       
         <h1 id="为什么使用轻量级的库？"><a href="#为什么使用轻量级的库？" class="headerlink" title="为什么使用轻量级的库？"></a>为什么使用轻量级的库？</h1><p>通常我会选择一些成熟的、功能丰富的框架，而这些框架通常是一些重量级的库，也许很多功能你根本用不到，而这些需求之外的功能直接导致了代码体积的增长。也许使用Proguard能移除没有使用的代码，但是类之间如果存在复杂的依赖耦合关系，Proguard还能起到多大作用，Who knows. 有人担心以后可能需要用到那些功能，现在的库没法满足需求. OK, 在使用这个库的时候了解是如何设计和实现的，优秀的库都是对扩展开放的，面向接口编程，那么需要新功能的话就扩展它吧，学习其他人造轮子也会提高自己的编程能力。</p>
 <p>曾经一个朋友拿着他们公司大约200kb的类似小米游戏下载软件给我看，我简直无法相信，现在一个功能非常简单的apk动不动就是几兆，能做到这个程度，几乎让人怀疑这个软件的是否专业，然而它在低端机器上表现得都非常流畅。我们费劲心思琢磨如何给apk瘦身，结果增加几个大的jar包就打回了原形，我们要增加第三方统计，友盟的百度的都加上，再加上第三方登录，推送，这些sdk再引用了大量的库比如http组件，json解析，安装包一下子膨胀了几兆，难受但是无奈。</p>
@@ -226,194 +186,127 @@
 <p>最后在取disk缓存时，会检查复用信息，比如想要加载地址是“…/2/w/120”的图片，尝试读取key为“…/2/w/320”的缓存图片，没有的话再尝试下一个key为“…/2/w/640”的图片，查询不到复用的缓存就只能从网络下载。大致就是这样</p>
 <p><a target="_blank" rel="noopener" href="http://dev.bizo.com/2014/06/cached-thread-pool-considered-harmlful.html">Executors.newCachedThreadPool有毒</a> - Executors.newCachedThreadPool() considered harmful<br><a target="_blank" rel="noopener" href="http://developer.android.com/training/multiple-threads/create-threadpool.html">ThreadSample</a> - Google官方最佳实践系列之使用多线程<br><a target="_blank" rel="noopener" href="http://cube-sdk.liaohuqiu.net/cn/imageloader/">ImageLoader文档</a> - Cube SDK官方文档<br><a target="_blank" rel="noopener" href="http://developer.qiniu.com/code/v6/api/kodo-api/image/imageview2.html">七牛文档</a> - 图片基本处理</p>
 
+      
     </div>
-
     
+  </div>
+  
     
-    
-
-      <footer class="post-footer">
-
+<nav id="article-nav">
+  
+    <a href="/2016/04/01/Volley%20Q&A/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption"><</strong>
+      <div class="article-nav-title">
         
-
-
+          Volley Q&amp;A
         
-    <div class="post-nav">
-      <div class="post-nav-item">
-    <a href="/2014/11/07/how-to-build-rest-client/" rel="prev" title="如何构建一个REST客户端">
-      <i class="fa fa-chevron-left"></i> 如何构建一个REST客户端
-    </a></div>
-      <div class="post-nav-item">
-    <a href="/2016/04/01/Volley%20Q&A/" rel="next" title="Volley Q&A">
-      Volley Q&A <i class="fa fa-chevron-right"></i>
-    </a></div>
+      </div>
+    </a>
+  
+  
+    <a href="/2014/11/07/how-to-build-rest-client/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">如何构建一个REST客户端</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+
+
+
+<div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="image-loader-in-cube-sdk_1" data-title="浅析Cube SDK里的ImageLoader组件是如何加载图片的（一）" data-url="http://sonaive.me/2016/03/30/image-loader-in-cube-sdk_1/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"true"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+
+
+</div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info">
+    	<div class="footer-left">
+    		&copy; 2020 So Naive
+    	</div>
+      	<div class="footer-right">
+      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
+      	</div>
     </div>
-      </footer>
+  </div>
+</footer>
+    </div>
     
-  </article>
   
-  
-  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
 
 
-
-          </div>
-          
 
 <script>
-  window.addEventListener('tabs:register', () => {
-    let { activeClass } = CONFIG.comments;
-    if (CONFIG.comments.storage) {
-      activeClass = localStorage.getItem('comments_active') || activeClass;
-    }
-    if (activeClass) {
-      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
-      if (activeTab) {
-        activeTab.click();
-      }
-    }
-  });
-  if (CONFIG.comments.storage) {
-    window.addEventListener('tabs:click', event => {
-      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
-      let commentClass = event.target.classList[1];
-      localStorage.setItem('comments_active', commentClass);
-    });
-  }
+	var yiliaConfig = {
+		fancybox: true,
+		mathjax: true,
+		animate: false,
+		isHome: false,
+		isPost: true,
+		isArchive: false,
+		isTag: false,
+		isCategory: false,
+		open_in_new: false
+	}
 </script>
 
-        </div>
-          
-  
-  <div class="toggle sidebar-toggle">
-    <span class="toggle-line toggle-line-first"></span>
-    <span class="toggle-line toggle-line-middle"></span>
-    <span class="toggle-line toggle-line-last"></span>
+<script src="http://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
+
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
   </div>
-
-  <aside class="sidebar">
-    <div class="sidebar-inner">
-
-      <ul class="sidebar-nav motion-element">
-        <li class="sidebar-nav-toc">
-          Table of Contents
-        </li>
-        <li class="sidebar-nav-overview">
-          Overview
-        </li>
-      </ul>
-
-      <!--noindex-->
-      <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8%E8%BD%BB%E9%87%8F%E7%BA%A7%E7%9A%84%E5%BA%93%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">为什么使用轻量级的库？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E4%B8%AA%E5%9B%BE%E7%89%87%E5%8A%A0%E8%BD%BD%E6%A1%86%E6%9E%B6%E7%9A%84%E5%8A%A0%E8%BD%BD%E6%B5%81%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">一个图片加载框架的加载流程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E7%B1%BB%E5%8A%9F%E8%83%BD%E4%BB%8B%E7%BB%8D"><span class="nav-number">3.</span> <span class="nav-text">核心类功能介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#CubeImageView"><span class="nav-number">3.1.</span> <span class="nav-text">CubeImageView</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%ADImageView%E6%98%AF%E8%A2%AB%E5%A4%8D%E7%94%A8%E7%9A%84%EF%BC%8C%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%AD%E9%87%8D%E5%A4%8D%E8%AF%B7%E6%B1%82%EF%BC%9F"><span class="nav-number">3.1.1.</span> <span class="nav-text">如何判断ImageView是被复用的，如何判断重复请求？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SimpleTask"><span class="nav-number">3.2.</span> <span class="nav-text">SimpleTask</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LoadImageTask"><span class="nav-number">3.3.</span> <span class="nav-text">LoadImageTask</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1%EF%BC%89%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E4%BD%BF%E7%94%A8ConcurrentHashMap%E4%BF%9D%E5%AD%98%E5%BE%85%E6%89%A7%E8%A1%8C%E7%9A%84%E4%BB%BB%E5%8A%A1%EF%BC%9F"><span class="nav-number">3.3.1.</span> <span class="nav-text">1）为什么要使用ConcurrentHashMap保存待执行的任务？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2%EF%BC%89%E5%A6%82%E4%BD%95%E9%80%80%E5%87%BA%E6%AD%A3%E5%9C%A8%E6%89%A7%E8%A1%8C%E7%9A%84%E4%BB%BB%E5%8A%A1%EF%BC%8C%E6%9A%82%E5%81%9C%E4%BB%BB%E5%8A%A1%E5%92%8C%E6%81%A2%E5%A4%8D%E4%BB%BB%E5%8A%A1%EF%BC%9F"><span class="nav-number">3.3.2.</span> <span class="nav-text">2）如何退出正在执行的任务，暂停任务和恢复任务？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3%EF%BC%89%E5%A6%82%E4%BD%95%E9%85%8D%E7%BD%AE%E7%BA%BF%E7%A8%8B%E6%B1%A0%EF%BC%9F"><span class="nav-number">3.3.3.</span> <span class="nav-text">3）如何配置线程池？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%BE%E7%89%87%E5%A4%8D%E7%94%A8"><span class="nav-number">3.4.</span> <span class="nav-text">图片复用</span></a></li></ol></li></ol></div>
-      </div>
-      <!--/noindex-->
-
-      <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-  <p class="site-author-name" itemprop="name">So Naive</p>
-  <div class="site-description" itemprop="description"></div>
-</div>
-<div class="site-state-wrap motion-element">
-  <nav class="site-state">
-      <div class="site-state-item site-state-posts">
-          <a href="/archives/">
-        
-          <span class="site-state-item-count">10</span>
-          <span class="site-state-item-name">posts</span>
-        </a>
-      </div>
-  </nav>
-</div>
-  <div class="links-of-author motion-element">
-      <span class="links-of-author-item">
-        <a href="https://github.com/taoliuh" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;taoliuh" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
-      </span>
-      <span class="links-of-author-item">
-        <a href="mailto:taoliuh@gmail.com" title="E-Mail → mailto:taoliuh@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
-      </span>
-  </div>
-
-
-
-      </div>
-
-    </div>
-  </aside>
-  <div id="sidebar-dimmer"></div>
-
-
-      </div>
-    </main>
-
-    <footer class="footer">
-      <div class="footer-inner">
-        
-
-        
-
-<div class="copyright">
-  
-  &copy; 
-  <span itemprop="copyrightYear">2020</span>
-  <span class="with-love">
-    <i class="fa fa-user"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">So Naive</span>
-</div>
-
-        
-
-
-
-
-
-
-
-
-      </div>
-    </footer>
-  </div>
-
-  
-  <script src="/lib/anime.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
-  <script src="/lib/velocity/velocity.min.js"></script>
-  <script src="/lib/velocity/velocity.ui.min.js"></script>
-
-<script src="/js/utils.js"></script>
-
-<script src="/js/motion.js"></script>
-
-
-<script src="/js/schemes/muse.js"></script>
-
-
-<script src="/js/next-boot.js"></script>
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-  
-
 </body>
 </html>
