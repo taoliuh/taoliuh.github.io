@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://sonaive.me/2020/12/12/the-evolution-of-design-patterns/</loc>
+    
+    <lastmod>2021-01-04</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://sonaive.me/2014/11/07/how-to-build-rest-client/</loc>
     
     <lastmod>2020-12-27</lastmod>
@@ -10,13 +17,6 @@
   
   <url>
     <loc>http://sonaive.me/2018/11/21/android-architecture-components-analysis/</loc>
-    
-    <lastmod>2020-12-27</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://sonaive.me/2020/12/12/the-evolution-of-design-patterns/</loc>
     
     <lastmod>2020-12-27</lastmod>
     
@@ -74,7 +74,7 @@
 
   <url>
     <loc>http://sonaive.me/</loc>
-    <lastmod>2020-12-27</lastmod>
+    <lastmod>2021-01-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
